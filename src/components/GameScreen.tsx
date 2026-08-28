@@ -37,6 +37,7 @@ export function GameScreen({
   const [bid, setBid] = useState(0);
   const [tigressId, setTigressId] = useState<string | null>(null);
   const [showScores, setShowScores] = useState(false);
+  const thinker = view.thinkingPlayerIndex != null ? view.players[view.thinkingPlayerIndex] : null;
 
   useEffect(() => {
     setBid(0);
@@ -56,7 +57,7 @@ export function GameScreen({
   }
 
   return (
-    <div className="game-screen">
+    <div className={`game-screen${view.phase === "bidding" ? " has-bid-overlay" : ""}`}>
       <header className="topbar">
         <button className="text-btn" onClick={onLeave}>
           ← 离开
@@ -89,7 +90,11 @@ export function GameScreen({
               bid={view.bidsRevealed ? p.bid : null}
               tricks={p.tricksWon}
               score={p.score}
-              active={view.currentPlayerIndex === p.index}
+              active={
+                (view.phase === "playing" && view.currentPlayerIndex === p.index) ||
+                view.thinkingPlayerIndex === p.index
+              }
+              thinking={view.thinkingPlayerIndex === p.index}
               dealer={view.dealerIndex === p.index}
               type={p.type}
               connected={p.connected}
@@ -103,8 +108,15 @@ export function GameScreen({
             {leadMeta && <div className="lead-pill">{leadMeta.emoji} 跟 {leadMeta.name}</div>}
             {view.phase === "playing" && view.currentTrick.length === 0 && (
               <div className="pond-hint">
-                {yourTurn ? "轮到你领出了" : `等待 ${view.players[view.currentPlayerIndex]?.name} 出牌`}
+                {yourTurn
+                  ? "轮到你领出了"
+                  : thinker
+                    ? `${thinker.name} 正在想出哪张…`
+                    : `等待 ${view.players[view.currentPlayerIndex]?.name} 出牌`}
               </div>
+            )}
+            {view.phase === "playing" && view.currentTrick.length > 0 && thinker && !yourTurn && (
+              <div className="pond-hint">{thinker.name} 正在想…</div>
             )}
             <div className="trick-row">
               {view.currentTrick.map((play) => (
@@ -174,6 +186,12 @@ export function GameScreen({
           <div className="modal bid-modal">
             <h2>这一轮要赢几墩？</h2>
             <p>看着手牌，喊出你的预测。大家同时亮标。</p>
+            {thinker && (
+              <p className="waiting think-status">
+                {thinker.name} 正在琢磨要赢几墩
+                <ThinkDots />
+              </p>
+            )}
             {you.bid !== null ? (
               <p className="waiting">你标了 {you.bid}，正在等其他企鹅……</p>
             ) : (
@@ -307,6 +325,16 @@ export function GameScreen({
   );
 }
 
+function ThinkDots() {
+  return (
+    <span className="think-dots" aria-hidden>
+      <i />
+      <i />
+      <i />
+    </span>
+  );
+}
+
 function Seat({
   name,
   avatarIndex,
@@ -314,6 +342,7 @@ function Seat({
   tricks,
   score,
   active,
+  thinking,
   dealer,
   type,
   connected,
@@ -326,6 +355,7 @@ function Seat({
   tricks: number;
   score: number;
   active: boolean;
+  thinking?: boolean;
   dealer: boolean;
   type: string;
   connected: boolean;
@@ -333,14 +363,21 @@ function Seat({
   self?: boolean;
 }) {
   return (
-    <div className={`seat${active ? " active" : ""}${self ? " self" : ""}`}>
-      <img
-        className="seat-avatar"
-        src={SEAT_AVATARS[avatarIndex % SEAT_AVATARS.length]}
-        alt=""
-        width={56}
-        height={56}
-      />
+    <div className={`seat${active ? " active" : ""}${thinking ? " thinking" : ""}${self ? " self" : ""}`}>
+      <div className="seat-avatar-wrap">
+        <img
+          className="seat-avatar"
+          src={SEAT_AVATARS[avatarIndex % SEAT_AVATARS.length]}
+          alt=""
+          width={56}
+          height={56}
+        />
+        {thinking && (
+          <div className="think-bubble">
+            <ThinkDots />
+          </div>
+        )}
+      </div>
       <div className="seat-meta">
         <strong>
           {name}
@@ -351,6 +388,7 @@ function Seat({
         <span>
           {bid === null ? "未亮标" : `标 ${bid}`} · 赢 {tricks} · {score} 分
         </span>
+        {thinking && <span className="think-line">想一想…</span>}
         {!self && (
           <div className="mini-backs">
             {Array.from({ length: Math.min(handCount, 10) }, (_, i) => (

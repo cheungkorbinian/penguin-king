@@ -1,5 +1,5 @@
-import { choosePlay, runAiUntilHuman } from "../shared/ai.ts";
-import { applyAction, createGame, toClientView } from "../shared/engine.ts";
+import { aiThinkMs, stepAi } from "../shared/ai.ts";
+import { applyAction, createGame, nextAiActorIndex, toClientView } from "../shared/engine.ts";
 import { AI_NAMES } from "../shared/theme.ts";
 import type { AiDifficulty, GameState, Player, TigressAs } from "../shared/types.ts";
 import cors from "cors";
@@ -83,29 +83,15 @@ function stopAi(room: Room): void {
 
 function scheduleAi(io: Server, room: Room): void {
   stopAi(room);
-  const tick = (): void => {
-    if (!room.game) return;
-    if (room.game.phase === "bidding") {
-      room.game = runAiUntilHuman(room.game);
-      broadcastGame(io, room);
-    }
-    if (!room.game || room.game.phase !== "playing") return;
-    const actor = room.game.players[room.game.currentPlayerIndex];
-    if (!actor || actor.type !== "ai") return;
-    const choice = choosePlay(room.game, room.game.currentPlayerIndex);
-    room.game = applyAction(room.game, {
-      type: "play",
-      playerIndex: room.game.currentPlayerIndex,
-      cardId: choice.cardId,
-      tigressAs: choice.tigressAs,
-    });
+  if (!room.game || nextAiActorIndex(room.game) === null) return;
+  const wait = aiThinkMs(room.game);
+  room.aiTimer = setTimeout(() => {
+    if (!room.game || nextAiActorIndex(room.game) === null) return;
+    room.game = stepAi(room.game);
     syncPlayers(room);
     broadcastGame(io, room);
-    if (room.game.phase === "playing" && room.game.players[room.game.currentPlayerIndex]?.type === "ai") {
-      room.aiTimer = setTimeout(tick, 700);
-    }
-  };
-  room.aiTimer = setTimeout(tick, 450);
+    scheduleAi(io, room);
+  }, wait);
 }
 
 function syncPlayers(room: Room): void {

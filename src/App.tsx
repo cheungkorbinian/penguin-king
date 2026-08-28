@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { io, type Socket } from "socket.io-client";
-import { runAiUntilHuman, stepAi } from "../shared/ai.ts";
-import { applyAction, createGame, toClientView } from "../shared/engine.ts";
+import { aiThinkMs, stepAi } from "../shared/ai.ts";
+import { applyAction, createGame, nextAiActorIndex, toClientView } from "../shared/engine.ts";
 import { AI_NAMES } from "../shared/theme.ts";
 import type { AiDifficulty, ClientView, GameState, TigressAs } from "../shared/types.ts";
 import { CardAlbum } from "./components/CardAlbum.tsx";
@@ -69,11 +69,10 @@ export default function App() {
 
   useEffect(() => {
     if (!solo) return;
-    if (solo.phase !== "bidding" && solo.phase !== "playing") return;
-    const delay = solo.phase === "bidding" ? 380 : 720;
+    if (nextAiActorIndex(solo) === null) return;
     const timer = setTimeout(() => {
       setSolo((s) => (s ? stepAi(s) : s));
-    }, delay);
+    }, aiThinkMs(solo));
     return () => clearTimeout(timer);
   }, [solo]);
 
@@ -101,8 +100,7 @@ export default function App() {
         connected: true,
       })),
     ];
-    let game = createGame(players, { expansion, maxRounds: 10, aiDifficulty });
-    game = runAiUntilHuman(game);
+    const game = createGame(players, { expansion, maxRounds: 10, aiDifficulty });
     setSolo(game);
     setScreen("solo-game");
   }

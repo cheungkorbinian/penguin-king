@@ -1,4 +1,4 @@
-import { applyAction } from "./engine.ts";
+import { applyAction, nextAiActorIndex } from "./engine.ts";
 import { getLeadSuit, legalCards, needsTigressChoice } from "./legal.ts";
 import { resolveTrick } from "./scoring.ts";
 import type { AiDifficulty, Card, GameState, PlayedCard, TigressAs } from "./types.ts";
@@ -235,15 +235,31 @@ function choosePlaySharp(
   return pickCard(ranked[0]!, false);
 }
 
+export function aiThinkMs(state: GameState, rand = Math.random): number {
+  const idx = nextAiActorIndex(state);
+  if (idx === null) return 0;
+  const sharp = difficultyOf(state) === "sharp";
+  if (state.phase === "bidding") {
+    return Math.round((sharp ? 820 : 520) + rand() * (sharp ? 680 : 380));
+  }
+  const cards = state.hands[idx]?.length ?? 1;
+  const scan = Math.min(cards, 10) * (sharp ? 70 : 45);
+  const base = sharp ? 980 : 680;
+  const jitter = rand() * (sharp ? 520 : 360);
+  return Math.round(base + scan + jitter);
+}
+
 export function stepAi(state: GameState, rng?: () => number): GameState {
-  if (state.phase === "bidding") return runAiUntilHuman(state, rng);
+  const idx = nextAiActorIndex(state);
+  if (idx === null) return state;
+  if (state.phase === "bidding") {
+    return applyAction(state, { type: "bid", playerIndex: idx, amount: chooseBid(state, idx) }, rng);
+  }
   if (state.phase === "playing") {
-    const actor = state.players[state.currentPlayerIndex];
-    if (!actor || actor.type !== "ai") return state;
-    const choice = choosePlay(state, state.currentPlayerIndex);
+    const choice = choosePlay(state, idx);
     return applyAction(state, {
       type: "play",
-      playerIndex: state.currentPlayerIndex,
+      playerIndex: idx,
       cardId: choice.cardId,
       tigressAs: choice.tigressAs,
     }, rng);

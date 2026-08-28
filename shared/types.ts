@@ -121,6 +121,7 @@ export interface ClientView {
   completedTrickCount: number;
   winnerIndices: number[];
   yourLastRound: RoundScore | null;
+  thinkingPlayerIndex: number | null;
 }
 
 export type GameAction =

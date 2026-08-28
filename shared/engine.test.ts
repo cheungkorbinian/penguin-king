@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { runAiUntilHuman } from "./ai.ts";
-import { applyAction, createGame } from "./engine.ts";
+import { runAiUntilHuman, stepAi } from "./ai.ts";
+import { applyAction, createGame, nextAiActorIndex, toClientView } from "./engine.ts";
 import { legalCards } from "./legal.ts";
 import { resolveTrick, scoreRound } from "./scoring.ts";
 import type { Card, PlayedCard, Player } from "./types.ts";
@@ -229,5 +229,30 @@ describe("full game", () => {
     expect(state.phase).toBe("gameEnd");
     expect(state.config.aiDifficulty).toBe("sharp");
     expect(state.winnerIndices.length).toBeGreaterThan(0);
+  });
+});
+
+describe("AI thinking steps", () => {
+  it("stepAi fills only one AI bid at a time", () => {
+    const players: Player[] = [
+      { id: "h", name: "你", type: "human", connected: true },
+      { id: "1", name: "圆圆", type: "ai", connected: true },
+      { id: "2", name: "冰冰", type: "ai", connected: true },
+    ];
+    let state = createGame(players, { expansion: false, maxRounds: 10 }, makeRng(1));
+    expect(nextAiActorIndex(state)).toBe(1);
+    expect(toClientView(state, 0).thinkingPlayerIndex).toBe(1);
+
+    state = stepAi(state, makeRng(2));
+    const filled = state.bids.filter((b, i) => state.players[i]!.type === "ai" && b !== null);
+    expect(filled).toHaveLength(1);
+    expect(nextAiActorIndex(state)).toBe(2);
+
+    state = stepAi(state, makeRng(3));
+    expect(state.bids[1]).not.toBeNull();
+    expect(state.bids[2]).not.toBeNull();
+    expect(state.bids[0]).toBeNull();
+    expect(nextAiActorIndex(state)).toBeNull();
+    expect(toClientView(state, 0).thinkingPlayerIndex).toBeNull();
   });
 });

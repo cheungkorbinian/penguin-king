@@ -221,6 +221,17 @@ function advanceRound(state: GameState, rng?: () => number): void {
   dealRound(state, rng);
 }
 
+export function nextAiActorIndex(state: GameState): number | null {
+  if (state.phase === "bidding") {
+    const i = state.bids.findIndex((b, idx) => b === null && state.players[idx]?.type === "ai");
+    return i >= 0 ? i : null;
+  }
+  if (state.phase === "playing") {
+    return state.players[state.currentPlayerIndex]?.type === "ai" ? state.currentPlayerIndex : null;
+  }
+  return null;
+}
+
 export function toClientView(state: GameState, you: number): ClientView {
   const bidsRevealed = state.phase !== "bidding" || state.bids.every((b) => b !== null);
   const hand = state.hands[you] ?? [];
@@ -258,5 +269,6 @@ export function toClientView(state: GameState, you: number): ClientView {
     completedTrickCount: state.completedTricks.length,
     winnerIndices: state.winnerIndices,
     yourLastRound: state.history[you]?.at(-1) ?? null,
+    thinkingPlayerIndex: nextAiActorIndex(state),
   };
 }
