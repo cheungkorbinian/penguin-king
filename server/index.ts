@@ -222,6 +222,10 @@ io.on("connection", (socket) => {
     act(socket.id, { type: "play", cardId, tigressAs });
   });
 
+  socket.on("collect", () => {
+    act(socket.id, { type: "collect" });
+  });
+
   socket.on("nextRound", () => {
     act(socket.id, { type: "nextRound" });
   });
@@ -255,6 +259,9 @@ io.on("connection", (socket) => {
         room.game.players[idx]!.connected = false;
         room.game.players[idx]!.type = "ai";
         seat.type = "ai";
+        if (room.game.phase === "collecting") {
+          room.game = applyAction(room.game, { type: "collect", playerIndex: idx });
+        }
       }
     }
     broadcastLobby(io, room);
@@ -270,7 +277,11 @@ function roomOf(socketId: string): Room | undefined {
 
 function act(
   socketId: string,
-  action: { type: "bid"; amount: number } | { type: "play"; cardId: string; tigressAs?: TigressAs } | { type: "nextRound" },
+  action:
+    | { type: "bid"; amount: number }
+    | { type: "play"; cardId: string; tigressAs?: TigressAs }
+    | { type: "collect" }
+    | { type: "nextRound" },
 ): void {
   const room = roomOf(socketId);
   if (!room?.game) return;
@@ -286,6 +297,8 @@ function act(
         cardId: action.cardId,
         tigressAs: action.tigressAs,
       });
+    } else if (action.type === "collect") {
+      room.game = applyAction(room.game, { type: "collect", playerIndex });
     } else {
       if (room.game.phase !== "roundEnd") return;
       room.game = applyAction(room.game, { type: "nextRound" });

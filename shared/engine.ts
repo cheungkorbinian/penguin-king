@@ -12,6 +12,7 @@ import type {
   PublicPlayerView,
   RoundScore,
   TigressAs,
+  TrickResult,
 } from "./types.ts";
 
 export function cardsDealtForRound(round: number, maxRounds: number): number {
@@ -42,6 +43,8 @@ export function createGame(players: Player[], config: GameConfig, rng?: () => nu
     history: players.map(() => []),
     scores: players.map(() => 0),
     lastTrick: null,
+    pendingTrick: null,
+    collectReady: players.map(() => false),
     winnerIndices: [],
   };
   dealRound(state, rng);
@@ -69,6 +72,8 @@ function dealRound(state: GameState, rng?: () => number): void {
   state.completedTricks = [];
   state.lootAlliances = [];
   state.lastTrick = null;
+  state.pendingTrick = null;
+  state.collectReady = Array.from({ length: n }, () => false);
   state.phase = "bidding";
   state.leaderIndex = (state.dealerIndex + 1) % n;
   state.currentPlayerIndex = state.leaderIndex;
@@ -102,6 +107,7 @@ export function applyAction(state: GameState, action: GameAction, rng?: () => nu
   const next: GameState = structuredClone(state);
   if (action.type === "bid") bid(next, action.playerIndex, action.amount);
   else if (action.type === "play") play(next, action.playerIndex, action.cardId, action.tigressAs);
+  else if (action.type === "collect") collect(next, action.playerIndex);
   else if (action.type === "nextRound") advanceRound(next, rng);
   return next;
 }
@@ -144,7 +150,27 @@ function play(state: GameState, playerIndex: number, cardId: string, tigressAs?:
     return;
   }
 
-  const result = resolveTrick(state.currentTrick);
+  beginCollect(state, resolveTrick(state.currentTrick));
+}
+
+function beginCollect(state: GameState, result: TrickResult): void {
+  state.pendingTrick = result;
+  state.phase = "collecting";
+  state.collectReady = state.players.map((p) => p.type === "ai");
+  maybeSettleCollect(state);
+}
+
+function collect(state: GameState, playerIndex: number): void {
+  if (state.phase !== "collecting") throw new Error("现在还不用收牌");
+  state.collectReady[playerIndex] = true;
+  maybeSettleCollect(state);
+}
+
+function maybeSettleCollect(state: GameState): void {
+  if (state.phase !== "collecting") return;
+  if (!state.collectReady.every(Boolean)) return;
+  const result = state.pendingTrick;
+  if (!result) return;
   state.completedTricks.push(result);
   state.lastTrick = result;
   state.lootAlliances.push(...result.lootAlliances);
@@ -152,12 +178,15 @@ function play(state: GameState, playerIndex: number, cardId: string, tigressAs?:
     state.tricksWon[result.winnerIndex]! += 1;
   }
   state.currentTrick = [];
+  state.pendingTrick = null;
+  state.collectReady = state.players.map(() => false);
 
   const cardsLeft = state.hands[0]!.length;
   if (cardsLeft === 0) {
     finishRound(state);
     return;
   }
+  state.phase = "playing";
   state.leaderIndex = result.nextLeaderIndex;
   state.currentPlayerIndex = result.nextLeaderIndex;
 }
@@ -249,6 +278,7 @@ export function toClientView(state: GameState, you: number): ClientView {
     tricksWon: state.tricksWon[i] ?? 0,
     score: state.scores[i] ?? 0,
     lastRoundScore: state.history[i]?.at(-1) ?? null,
+    collected: state.phase === "collecting" ? Boolean(state.collectReady[i]) : false,
   }));
 
   return {
@@ -270,5 +300,7 @@ export function toClientView(state: GameState, you: number): ClientView {
     winnerIndices: state.winnerIndices,
     yourLastRound: state.history[you]?.at(-1) ?? null,
     thinkingPlayerIndex: nextAiActorIndex(state),
+    pendingTrick: state.pendingTrick,
+    youCollected: state.phase === "collecting" ? Boolean(state.collectReady[you]) : false,
   };
 }

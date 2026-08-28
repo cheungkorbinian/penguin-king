@@ -17,6 +17,7 @@ export function GameScreen({
   view,
   onBid,
   onPlay,
+  onCollect,
   onNextRound,
   onLeave,
   onRules,
@@ -25,6 +26,7 @@ export function GameScreen({
   view: ClientView;
   onBid: (amount: number) => void;
   onPlay: (cardId: string, tigressAs?: TigressAs) => void;
+  onCollect: () => void;
   onNextRound: () => void;
   onLeave: () => void;
   onRules: () => void;
@@ -95,6 +97,7 @@ export function GameScreen({
                 view.thinkingPlayerIndex === p.index
               }
               thinking={view.thinkingPlayerIndex === p.index}
+              collected={view.phase === "collecting" && p.collected}
               dealer={view.dealerIndex === p.index}
               type={p.type}
               connected={p.connected}
@@ -118,9 +121,26 @@ export function GameScreen({
             {view.phase === "playing" && view.currentTrick.length > 0 && thinker && !yourTurn && (
               <div className="pond-hint">{thinker.name} 正在想…</div>
             )}
+            {view.phase === "collecting" && view.pendingTrick && (
+              <div className="pond-hint">
+                {view.pendingTrick.destroyed
+                  ? "这一墩被吞掉了，无人得分"
+                  : `${view.players[view.pendingTrick.winnerIndex ?? 0]?.name} 赢了这一墩`}
+              </div>
+            )}
             <div className="trick-row">
               {view.currentTrick.map((play) => (
-                <div key={`${play.playerIndex}-${play.card.id}`} className="trick-item">
+                <div
+                  key={`${play.playerIndex}-${play.card.id}`}
+                  className={`trick-item${
+                    view.phase === "collecting" &&
+                    view.pendingTrick &&
+                    !view.pendingTrick.destroyed &&
+                    play.playerIndex === view.pendingTrick.winnerIndex
+                      ? " is-winner"
+                      : ""
+                  }`}
+                >
                   <MiniCard card={play.card} />
                   <span>{view.players[play.playerIndex]?.name}</span>
                   {play.tigressAs && (
@@ -129,7 +149,26 @@ export function GameScreen({
                 </div>
               ))}
             </div>
-            {view.lastTrick && view.currentTrick.length === 0 && (
+            {view.phase === "collecting" && (
+              <div className="collect-bar">
+                {view.youCollected ? (
+                  <p className="waiting">
+                    已确认收牌
+                    {view.players.some((p, i) => p.type === "human" && i !== view.you && !p.collected)
+                      ? `，还在看：${view.players
+                          .filter((p, i) => p.type === "human" && i !== view.you && !p.collected)
+                          .map((p) => p.name)
+                          .join("、")}`
+                      : ""}
+                  </p>
+                ) : (
+                  <button className="btn primary" onClick={onCollect}>
+                    收牌
+                  </button>
+                )}
+              </div>
+            )}
+            {view.lastTrick && view.currentTrick.length === 0 && view.phase === "playing" && (
               <div className="last-trick">
                 {view.lastTrick.destroyed
                   ? "上一墩被吞掉了，无人得分"
@@ -343,6 +382,7 @@ function Seat({
   score,
   active,
   thinking,
+  collected,
   dealer,
   type,
   connected,
@@ -356,6 +396,7 @@ function Seat({
   score: number;
   active: boolean;
   thinking?: boolean;
+  collected?: boolean;
   dealer: boolean;
   type: string;
   connected: boolean;
@@ -384,6 +425,7 @@ function Seat({
           {dealer ? " · 庄" : ""}
           {type === "ai" ? " · 人机" : ""}
           {!connected ? " · 离开" : ""}
+          {collected ? " · 已收" : ""}
         </strong>
         <span>
           {bid === null ? "未亮标" : `标 ${bid}`} · 赢 {tricks} · {score} 分

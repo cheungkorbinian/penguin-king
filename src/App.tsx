@@ -181,6 +181,7 @@ export default function App() {
           view={soloView}
           onBid={(amount) => soloAct({ type: "bid", playerIndex: 0, amount })}
           onPlay={(cardId, tigressAs) => soloAct({ type: "play", playerIndex: 0, cardId, tigressAs })}
+          onCollect={() => soloAct({ type: "collect", playerIndex: 0 })}
           onNextRound={() => soloAct({ type: "nextRound" })}
           onLeave={() => {
             setSolo(null);
@@ -208,6 +209,7 @@ export default function App() {
           view={onlineView}
           onBid={(amount) => ensureSocket().emit("bid", { amount })}
           onPlay={(cardId, tigressAs?: TigressAs) => ensureSocket().emit("play", { cardId, tigressAs })}
+          onCollect={() => ensureSocket().emit("collect")}
           onNextRound={() => ensureSocket().emit("nextRound")}
           onLeave={leaveOnline}
           onRules={() => setShowRules(true)}

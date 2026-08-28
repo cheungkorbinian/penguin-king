@@ -36,7 +36,7 @@ export interface Player {
   connected: boolean;
 }
 
-export type Phase = "bidding" | "playing" | "roundEnd" | "gameEnd";
+export type Phase = "bidding" | "playing" | "collecting" | "roundEnd" | "gameEnd";
 
 export interface RoundScore {
   round: number;
@@ -73,6 +73,7 @@ export interface PublicPlayerView {
   tricksWon: number;
   score: number;
   lastRoundScore: RoundScore | null;
+  collected: boolean;
 }
 
 export type AiDifficulty = "easy" | "sharp";
@@ -100,6 +101,8 @@ export interface GameState {
   history: RoundScore[][];
   scores: number[];
   lastTrick: TrickResult | null;
+  pendingTrick: TrickResult | null;
+  collectReady: boolean[];
   winnerIndices: number[];
 }
 
@@ -122,9 +125,12 @@ export interface ClientView {
   winnerIndices: number[];
   yourLastRound: RoundScore | null;
   thinkingPlayerIndex: number | null;
+  pendingTrick: TrickResult | null;
+  youCollected: boolean;
 }
 
 export type GameAction =
   | { type: "bid"; playerIndex: number; amount: number }
   | { type: "play"; playerIndex: number; cardId: string; tigressAs?: TigressAs }
+  | { type: "collect"; playerIndex: number }
   | { type: "nextRound" };

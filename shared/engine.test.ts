@@ -186,6 +186,11 @@ describe("full game", () => {
       cardId: last.id,
       tigressAs: last.kind.type === "tigress" ? "escape" : undefined,
     });
+    expect(state.phase).toBe("collecting");
+    expect(state.currentTrick).toHaveLength(2);
+    state = applyAction(state, { type: "collect", playerIndex: 0 });
+    expect(state.phase).toBe("collecting");
+    state = applyAction(state, { type: "collect", playerIndex: 1 });
     expect(state.phase).toBe("roundEnd");
     expect(state.history[0]).toHaveLength(1);
   });
@@ -254,5 +259,38 @@ describe("AI thinking steps", () => {
     expect(state.bids[0]).toBeNull();
     expect(nextAiActorIndex(state)).toBeNull();
     expect(toClientView(state, 0).thinkingPlayerIndex).toBeNull();
+  });
+});
+
+describe("trick collect", () => {
+  it("waits for the human to collect while AIs are already ready", () => {
+    const players: Player[] = [
+      { id: "h", name: "你", type: "human", connected: true },
+      { id: "1", name: "圆圆", type: "ai", connected: true },
+    ];
+    let state = createGame(players, { expansion: false, maxRounds: 10 }, makeRng(3));
+    state = applyAction(state, { type: "bid", playerIndex: 0, amount: 0 });
+    state = runAiUntilHuman(state, makeRng(4));
+    while (state.phase === "playing") {
+      const actor = state.currentPlayerIndex;
+      if (state.players[actor]!.type === "ai") {
+        state = runAiUntilHuman(state, makeRng(5));
+        continue;
+      }
+      const card = state.hands[actor]![0]!;
+      state = applyAction(state, {
+        type: "play",
+        playerIndex: actor,
+        cardId: card.id,
+        tigressAs: card.kind.type === "tigress" ? "escape" : undefined,
+      });
+    }
+    expect(state.phase).toBe("collecting");
+    expect(state.collectReady[1]).toBe(true);
+    expect(state.collectReady[0]).toBe(false);
+    expect(toClientView(state, 0).youCollected).toBe(false);
+    expect(state.currentTrick).toHaveLength(2);
+    state = applyAction(state, { type: "collect", playerIndex: 0 });
+    expect(state.phase).toBe("roundEnd");
   });
 });

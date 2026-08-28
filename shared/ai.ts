@@ -296,6 +296,7 @@ export function runAiUntilHuman(state: GameState, rng?: () => number): GameState
       );
       continue;
     }
+    if (current.phase === "collecting") break;
     break;
   }
   return current;
