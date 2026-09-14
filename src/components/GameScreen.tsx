@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getLeadSuit } from "../../shared/legal.ts";
 import type { Card, ClientView, TigressAs } from "../../shared/types.ts";
 import { cardTitle, SUIT_META } from "../../shared/theme.ts";
@@ -40,10 +40,17 @@ export function GameScreen({
   const [tigressId, setTigressId] = useState<string | null>(null);
   const [showScores, setShowScores] = useState(false);
   const thinker = view.thinkingPlayerIndex != null ? view.players[view.thinkingPlayerIndex] : null;
+  const swiping = useRef(false);
+  const swipeStartX = useRef(0);
+  const handRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setBid(0);
   }, [view.round, view.phase]);
+
+  useEffect(() => {
+    handRef.current?.scrollTo({ left: 0 });
+  }, [view.round]);
 
   const yourTurn = view.phase === "playing" && view.currentPlayerIndex === view.you;
   const leadSuit = getLeadSuit(view.currentTrick);
@@ -205,7 +212,16 @@ export function GameScreen({
           />
           <div
             className="hand"
-            style={{ "--hand-count": Math.max(view.hand.length, 1) } as CSSProperties}
+            ref={handRef}
+            onPointerDown={(event) => {
+              swiping.current = false;
+              swipeStartX.current = event.clientX;
+            }}
+            onPointerMove={(event) => {
+              if (Math.abs(event.clientX - swipeStartX.current) > 12) {
+                swiping.current = true;
+              }
+            }}
           >
             {view.hand.map((card) => {
               const legal = view.legalCardIds.includes(card.id);
@@ -214,7 +230,10 @@ export function GameScreen({
                 <button
                   key={card.id}
                   className={`playing-card${dim ? " dim" : ""}${yourTurn && legal ? " playable" : ""}`}
-                  onClick={() => tryPlay(card)}
+                  onClick={() => {
+                    if (swiping.current) return;
+                    tryPlay(card);
+                  }}
                   disabled={!yourTurn || !legal}
                   title={cardTitle(card)}
                 >

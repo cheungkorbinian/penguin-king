@@ -596,8 +596,10 @@ button { cursor: pointer; touch-action: manipulation; }
   filter: drop-shadow(0 8px 10px rgba(16, 36, 58, 0.18));
 }
 .playing-card {
-  width: clamp(64px, calc((100% - (var(--hand-count) - 1) * 8px) / var(--hand-count)), 108px);
+  width: 100px;
   flex: 0 0 auto;
+  scroll-snap-align: start;
+  touch-action: pan-x;
   transition: transform 0.16s ease;
 }
 @media (hover: hover) and (pointer: fine) {
@@ -772,26 +774,32 @@ button { cursor: pointer; touch-action: manipulation; }
   border-radius: 28px;
   padding: 12px;
   backdrop-filter: blur(12px) saturate(1.1);
+  min-width: 0;
+  overflow: hidden;
 }
 .hand {
-  --hand-count: 1;
   display: flex;
   gap: 8px;
   overflow-x: auto;
+  overflow-y: hidden;
   padding: 12px 4px 8px;
   justify-content: flex-start;
+  min-width: 0;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
 }
-.game-screen[data-hand="0"] .hand,
-.game-screen[data-hand="1"] .hand,
-.game-screen[data-hand="2"] .hand,
-.game-screen[data-hand="3"] .hand,
-.game-screen[data-hand="4"] .hand {
-  justify-content: center;
+.hand::-webkit-scrollbar {
+  display: none;
 }
-.playing-card {
-  width: clamp(64px, calc((100% - (var(--hand-count) - 1) * 8px) / var(--hand-count)), 108px);
-  flex: 0 0 auto;
-  transition: transform 0.16s ease;
+.hand::before,
+.hand::after {
+  content: "";
+  flex: 1 1 0;
+  min-width: 0;
+  pointer-events: none;
 }
 
 .modal-backdrop {
@@ -971,11 +979,10 @@ button { cursor: pointer; touch-action: manipulation; }
   .album-zoom { grid-template-columns: 1fr; }
   .zoom-card, .zoom-card .sk-card { width: min(160px, 42vw); margin: 0 auto; }
   .setup-grid { grid-template-columns: 1fr; }
-  .playing-card { width: clamp(64px, calc((100% - (var(--hand-count) - 1) * 8px) / var(--hand-count)), 100px); height: auto; }
+  .playing-card { width: 92px; height: auto; }
   .mini-card { width: 72px; height: auto; }
   .pond-ring { border-radius: 36px; min-height: 180px; }
   .seat { min-width: 140px; }
-  .hand { justify-content: flex-start; }
   .home-title { padding-top: 12px; }
   .home-title h1 { font-size: 36px; }
   .home-mode-controls { flex-wrap: wrap; }
@@ -1155,21 +1162,11 @@ button { cursor: pointer; touch-action: manipulation; }
   .you-panel .seat { width: 100%; }
   .you-panel .seat-meta strong { max-width: none; }
   .hand {
-    gap: 6px;
-    padding: 8px 2px 2px;
-    justify-content: flex-start;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-  }
-  .game-screen[data-hand="0"] .hand,
-  .game-screen[data-hand="1"] .hand,
-  .game-screen[data-hand="2"] .hand,
-  .game-screen[data-hand="3"] .hand,
-  .game-screen[data-hand="4"] .hand {
-    justify-content: center;
+    gap: 8px;
+    padding: 10px 2px 4px;
   }
   .playing-card {
-    width: clamp(68px, calc((100% - (var(--hand-count) - 1) * 6px) / var(--hand-count)), 100px);
+    width: 92px;
   }
   .game-screen.has-bid-overlay .opponents { z-index: auto; }
 
@@ -1209,7 +1206,7 @@ button { cursor: pointer; touch-action: manipulation; }
   .home-title h1 { font-size: 26px; }
   .seat-avatar { width: 32px; height: 32px; }
   .playing-card {
-    width: clamp(62px, calc((100% - (var(--hand-count) - 1) * 6px) / var(--hand-count)), 88px);
+    width: 86px;
   }
   .mini-card { width: clamp(52px, 16vw, 68px); }
   .you-panel { padding: 6px; }
@@ -1223,7 +1220,7 @@ button { cursor: pointer; touch-action: manipulation; }
   .home-title h1 { font-size: 28px; }
   .home-dock { width: min(920px, calc(100% - 16px)); }
   .arena { grid-template-rows: auto minmax(0, 1fr) auto; padding: 0 10px 8px; }
-  .playing-card { width: 64px; }
+  .playing-card { width: 76px; }
   .mini-card { width: 48px; }
   .seat { min-width: 120px; }
   .seat-avatar { width: 36px; height: 36px; }
