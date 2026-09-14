@@ -732,9 +732,7 @@ button { cursor: pointer; touch-action: manipulation; }
   height: 100%;
 }
 .sk-card.is-special .sk-window img {
-  object-position: center 42%;
-  transform: scale(1.48);
-  transform-origin: center 40%;
+  object-position: center 46%;
 }
 .sk-foot {
   margin: 0;
