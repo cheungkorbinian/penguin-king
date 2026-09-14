@@ -639,7 +639,9 @@ button { cursor: pointer; touch-action: manipulation; }
   grid-template-rows: auto minmax(56%, 1fr) 1.45em;
 }
 .playing-card .sk-card.is-special {
-  grid-template-rows: minmax(58%, 1fr) 2.35em;
+  grid-template-rows: minmax(0, 1fr) 1.85em;
+  padding: 5% 6% 4%;
+  gap: 2%;
 }
 .playing-card .sk-tag {
   display: none;
@@ -659,8 +661,9 @@ button { cursor: pointer; touch-action: manipulation; }
 }
 .playing-card .sk-card.is-special .sk-foot {
   white-space: normal;
-  line-height: 1.15;
+  line-height: 1.12;
   overflow: hidden;
+  font-size: 0.7em;
 }
 .playing-card .sk-card.is-special .sk-foot em {
   display: block;
@@ -706,6 +709,7 @@ button { cursor: pointer; touch-action: manipulation; }
   min-width: 0;
 }
 .sk-window {
+  position: relative;
   min-height: 0;
   border-radius: 0.55em;
   overflow: hidden;
@@ -715,9 +719,19 @@ button { cursor: pointer; touch-action: manipulation; }
 .sk-card.is-back img {
   width: 100%;
   height: 100%;
+  min-width: 0;
+  min-height: 0;
   object-fit: cover;
   object-position: center 40%;
   display: block;
+}
+.sk-card.is-special .sk-window {
+  height: 100%;
+}
+.sk-card.is-special .sk-window img {
+  object-position: center 46%;
+  transform: scale(1.24);
+  transform-origin: center 45%;
 }
 .sk-foot {
   margin: 0;
@@ -764,8 +778,9 @@ button { cursor: pointer; touch-action: manipulation; }
 .sk-card.is-small:not(.is-special) .sk-foot em { display: none; }
 .sk-card.is-small .sk-head { justify-content: flex-start; }
 .sk-card.is-small.is-special {
-  grid-template-rows: minmax(52%, 1fr) 2.15em;
-  gap: 3%;
+  grid-template-rows: minmax(0, 1fr) 1.65em;
+  gap: 2%;
+  padding: 4% 5% 3%;
 }
 .sk-card.is-small.is-special .sk-foot {
   white-space: normal;
@@ -785,8 +800,8 @@ button { cursor: pointer; touch-action: manipulation; }
   color: #111;
 }
 .sk-card.is-special {
-  grid-template-rows: minmax(62%, 1fr) auto;
-  padding-top: 6%;
+  grid-template-rows: minmax(0, 1fr) auto;
+  padding: 5% 6% 4%;
 }
 .sk-card.is-back {
   display: block;
