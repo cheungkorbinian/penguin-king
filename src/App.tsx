@@ -4,6 +4,7 @@ import { aiThinkMs, stepAi } from "../shared/ai.ts";
 import { applyAction, createGame, nextAiActorIndex, toClientView } from "../shared/engine.ts";
 import { AI_NAMES } from "../shared/theme.ts";
 import type { AiDifficulty, ClientView, GameState, TigressAs } from "../shared/types.ts";
+import { normalizeAiDifficulty } from "../shared/types.ts";
 import { CardAlbum } from "./components/CardAlbum.tsx";
 import { GameScreen } from "./components/GameScreen.tsx";
 import { Rules } from "./components/Rules.tsx";
@@ -34,8 +35,14 @@ function loadName(): string {
 }
 
 function loadDifficulty(): AiDifficulty {
-  return localStorage.getItem("penguin-king-ai") === "sharp" ? "sharp" : "easy";
+  return normalizeAiDifficulty(localStorage.getItem("penguin-king-ai"));
 }
+
+const AI_DIFFICULTY_LABEL: Record<AiDifficulty, string> = {
+  easy: "轻松",
+  sharp: "认真",
+  hard: "困难",
+};
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>("home");
@@ -287,6 +294,7 @@ function Home({
             <select value={aiDifficulty} onChange={(e) => setAiDifficulty(e.target.value as AiDifficulty)}>
               <option value="easy">轻松</option>
               <option value="sharp">认真</option>
+              <option value="hard">困难</option>
             </select>
           </label>
         </div>
@@ -405,6 +413,7 @@ function OnlineLobby({
               >
                 <option value="easy">轻松</option>
                 <option value="sharp">认真</option>
+                <option value="hard">困难</option>
               </select>
             </label>
             <button className="btn ghost" onClick={onAddAi} disabled={lobby.players.length >= 6}>
@@ -417,7 +426,7 @@ function OnlineLobby({
         )}
         {!isHost && (
           <p className="waiting">
-            等房主开打……人机是{lobby.aiDifficulty === "sharp" ? "认真" : "轻松"}档。
+            等房主开打……人机是{AI_DIFFICULTY_LABEL[lobby.aiDifficulty ?? "easy"]}档。
           </p>
         )}
       </section>

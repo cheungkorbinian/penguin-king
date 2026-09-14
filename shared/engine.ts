@@ -14,6 +14,7 @@ import type {
   TigressAs,
   TrickResult,
 } from "./types.ts";
+import { normalizeAiDifficulty } from "./types.ts";
 
 export function cardsDealtForRound(round: number, maxRounds: number): number {
   return Math.min(round, maxRounds);
@@ -26,7 +27,7 @@ export function createGame(players: Player[], config: GameConfig, rng?: () => nu
   const state: GameState = {
     config: {
       ...config,
-      aiDifficulty: config.aiDifficulty === "sharp" ? "sharp" : "easy",
+      aiDifficulty: normalizeAiDifficulty(config.aiDifficulty),
     },
     players: players.map((p) => ({ ...p })),
     phase: "bidding",

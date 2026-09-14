@@ -76,7 +76,12 @@ export interface PublicPlayerView {
   collected: boolean;
 }
 
-export type AiDifficulty = "easy" | "sharp";
+export type AiDifficulty = "easy" | "sharp" | "hard";
+
+export function normalizeAiDifficulty(value?: string | null): AiDifficulty {
+  if (value === "hard" || value === "sharp") return value;
+  return "easy";
+}
 
 export interface GameConfig {
   expansion: boolean;

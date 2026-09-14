@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { runAiUntilHuman, stepAi } from "./ai.ts";
+import { choosePlay, runAiUntilHuman, stepAi } from "./ai.ts";
 import { applyAction, createGame, nextAiActorIndex, toClientView } from "./engine.ts";
 import { legalCards } from "./legal.ts";
 import { resolveTrick, scoreRound } from "./scoring.ts";
-import type { Card, PlayedCard, Player } from "./types.ts";
+import type { Card, GameState, PlayedCard, Player } from "./types.ts";
 
 const fish = (n: number) => ({ id: `fish-${n}`, kind: { type: "suit" as const, suit: "fish" as const, rank: n } });
 const shell = (n: number) => ({ id: `shell-${n}`, kind: { type: "suit" as const, suit: "shell" as const, rank: n } });
@@ -234,6 +234,72 @@ describe("full game", () => {
     expect(state.phase).toBe("gameEnd");
     expect(state.config.aiDifficulty).toBe("sharp");
     expect(state.winnerIndices.length).toBeGreaterThan(0);
+  });
+
+  it("four hard AIs finish a 10-round game without crashing", () => {
+    const players: Player[] = [
+      { id: "1", name: "圆圆", type: "ai", connected: true },
+      { id: "2", name: "冰冰", type: "ai", connected: true },
+      { id: "3", name: "波波", type: "ai", connected: true },
+      { id: "4", name: "朵朵", type: "ai", connected: true },
+    ];
+    let state = createGame(players, { expansion: true, maxRounds: 10, aiDifficulty: "hard" }, makeRng(42));
+    for (let i = 0; i < 20; i++) {
+      state = runAiUntilHuman(state, makeRng(500 + i));
+      if (state.phase === "gameEnd") break;
+      if (state.phase === "roundEnd") {
+        state = applyAction(state, { type: "nextRound" }, makeRng(600 + i));
+      }
+    }
+    expect(state.phase).toBe("gameEnd");
+    expect(state.config.aiDifficulty).toBe("hard");
+    expect(state.winnerIndices.length).toBeGreaterThan(0);
+  }, 20000);
+});
+
+describe("hard AI tactics", () => {
+  function hardState(playerCount: number, over: Partial<GameState> & { hands: Card[][] }) {
+    const players: Player[] = Array.from({ length: playerCount }, (_, i) => ({
+      id: String(i),
+      name: `p${i}`,
+      type: "ai" as const,
+      connected: true,
+    }));
+    return {
+      ...createGame(players, { expansion: false, maxRounds: 10, aiDifficulty: "hard" }, makeRng(1)),
+      phase: "playing" as const,
+      bids: players.map(() => 1),
+      tricksWon: players.map(() => 0),
+      leaderIndex: 0,
+      currentPlayerIndex: 1,
+      ...over,
+    };
+  }
+
+  it("captures the penguin king with a mermaid when it still needs the trick", () => {
+    const state = hardState(2, {
+      currentTrick: [{ playerIndex: 0, card: king() }],
+      hands: [[fish(4)], [mermaid(0), fish(3), escape(0)]],
+    });
+    expect(choosePlay(state, 1).cardId).toBe("mermaid-0");
+  });
+
+  it("ducks the king with an escape when bidding zero", () => {
+    const state = hardState(2, {
+      bids: [1, 0],
+      currentTrick: [{ playerIndex: 0, card: king() }],
+      hands: [[fish(4)], [mermaid(0), escape(0)]],
+    });
+    expect(choosePlay(state, 1).cardId).toBe("escape-0");
+  });
+
+  it("does not dump the king on a cheap trick while someone else can still play", () => {
+    const state = hardState(3, {
+      bids: [0, 1, 1],
+      currentTrick: [{ playerIndex: 0, card: fish(4) }],
+      hands: [[shell(6)], [king(), fish(8), escape(1)], [shell(3)]],
+    });
+    expect(choosePlay(state, 1).cardId).not.toBe("king");
   });
 });
 

@@ -2,6 +2,7 @@ import { aiThinkMs, stepAi } from "../shared/ai.ts";
 import { applyAction, createGame, nextAiActorIndex, toClientView } from "../shared/engine.ts";
 import { AI_NAMES } from "../shared/theme.ts";
 import type { AiDifficulty, GameState, Player, TigressAs } from "../shared/types.ts";
+import { normalizeAiDifficulty } from "../shared/types.ts";
 import cors from "cors";
 import express from "express";
 import { createServer } from "node:http";
@@ -132,7 +133,7 @@ io.on("connection", (socket) => {
       code,
       hostId: seat.id,
       expansion: Boolean(expansion),
-      aiDifficulty: aiDifficulty === "sharp" ? "sharp" : "easy",
+      aiDifficulty: normalizeAiDifficulty(aiDifficulty),
       seats: [seat],
       game: null,
       aiTimer: null,
@@ -166,7 +167,7 @@ io.on("connection", (socket) => {
   socket.on("setAiDifficulty", ({ aiDifficulty }: { aiDifficulty?: AiDifficulty }) => {
     const room = roomOf(socket.id);
     if (!room || room.hostId !== socket.id || room.game) return;
-    room.aiDifficulty = aiDifficulty === "sharp" ? "sharp" : "easy";
+    room.aiDifficulty = normalizeAiDifficulty(aiDifficulty);
     broadcastLobby(io, room);
   });
 
@@ -175,9 +176,7 @@ io.on("connection", (socket) => {
     if (!room || room.hostId !== socket.id) return;
     if (room.game) return;
     if (room.seats.length >= 6) return socket.emit("errorMsg", "已经满员");
-    if (aiDifficulty === "sharp" || aiDifficulty === "easy") {
-      room.aiDifficulty = aiDifficulty;
-    }
+    if (aiDifficulty) room.aiDifficulty = normalizeAiDifficulty(aiDifficulty);
     const used = new Set(room.seats.map((s) => s.name));
     const name = AI_NAMES.find((n) => !used.has(n)) ?? `机器人${room.seats.length}`;
     room.seats.push({

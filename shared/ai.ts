@@ -1,10 +1,12 @@
 import { applyAction, nextAiActorIndex } from "./engine.ts";
 import { getLeadSuit, legalCards, needsTigressChoice } from "./legal.ts";
 import { resolveTrick } from "./scoring.ts";
+import { chooseBidHard, choosePlayHard } from "./aiHard.ts";
 import type { AiDifficulty, Card, GameState, PlayedCard, TigressAs } from "./types.ts";
+import { normalizeAiDifficulty } from "./types.ts";
 
 function difficultyOf(state: GameState): AiDifficulty {
-  return state.config.aiDifficulty === "sharp" ? "sharp" : "easy";
+  return normalizeAiDifficulty(state.config.aiDifficulty);
 }
 
 function cardPower(card: Card): number {
@@ -33,7 +35,10 @@ function isPrecious(card: Card): boolean {
 }
 
 export function chooseBid(state: GameState, playerIndex: number): number {
-  return difficultyOf(state) === "sharp" ? chooseBidSharp(state, playerIndex) : chooseBidEasy(state, playerIndex);
+  const difficulty = difficultyOf(state);
+  if (difficulty === "hard") return chooseBidHard(state, playerIndex);
+  if (difficulty === "sharp") return chooseBidSharp(state, playerIndex);
+  return chooseBidEasy(state, playerIndex);
 }
 
 function chooseBidEasy(state: GameState, playerIndex: number): number {
@@ -106,7 +111,10 @@ export function choosePlay(
   state: GameState,
   playerIndex: number,
 ): { cardId: string; tigressAs?: TigressAs } {
-  return difficultyOf(state) === "sharp" ? choosePlaySharp(state, playerIndex) : choosePlayEasy(state, playerIndex);
+  const difficulty = difficultyOf(state);
+  if (difficulty === "hard") return choosePlayHard(state, playerIndex);
+  if (difficulty === "sharp") return choosePlaySharp(state, playerIndex);
+  return choosePlayEasy(state, playerIndex);
 }
 
 function choosePlayEasy(
@@ -238,14 +246,19 @@ function choosePlaySharp(
 export function aiThinkMs(state: GameState, rand = Math.random): number {
   const idx = nextAiActorIndex(state);
   if (idx === null) return 0;
-  const sharp = difficultyOf(state) === "sharp";
+  const difficulty = difficultyOf(state);
   if (state.phase === "bidding") {
-    return Math.round((sharp ? 820 : 520) + rand() * (sharp ? 680 : 380));
+    if (difficulty === "hard") return Math.round(1080 + rand() * 920);
+    if (difficulty === "sharp") return Math.round(820 + rand() * 680);
+    return Math.round(520 + rand() * 380);
   }
   const cards = state.hands[idx]?.length ?? 1;
-  const scan = Math.min(cards, 10) * (sharp ? 70 : 45);
-  const base = sharp ? 980 : 680;
-  const jitter = rand() * (sharp ? 520 : 360);
+  if (difficulty === "hard") {
+    return Math.round(1180 + Math.min(cards, 10) * 90 + rand() * 720);
+  }
+  const scan = Math.min(cards, 10) * (difficulty === "sharp" ? 70 : 45);
+  const base = difficulty === "sharp" ? 980 : 680;
+  const jitter = rand() * (difficulty === "sharp" ? 520 : 360);
   return Math.round(base + scan + jitter);
 }
 
