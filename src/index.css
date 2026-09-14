@@ -524,6 +524,7 @@ button { cursor: pointer; touch-action: manipulation; }
 }
 @media (prefers-reduced-motion: reduce) {
   .think-dots i { animation: none; opacity: 0.7; }
+  .play-hint { animation: none; }
 }
 .seat-meta { display: flex; flex-direction: column; font-size: 12px; }
 .seat-meta strong { font-size: 14px; }
@@ -787,6 +788,22 @@ button { cursor: pointer; touch-action: manipulation; }
   backdrop-filter: blur(12px) saturate(1.1);
   min-width: 0;
   overflow: hidden;
+}
+.play-hint {
+  margin: 8px 2px 0;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: #854d0e;
+  background: rgba(255, 248, 232, 0.92);
+  border: 1.5px solid rgba(240, 193, 74, 0.75);
+  padding: 6px 12px;
+  border-radius: 999px;
+  animation: play-hint-in 0.28s ease;
+}
+@keyframes play-hint-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
 }
 .hand {
   display: flex;
@@ -1169,6 +1186,11 @@ button { cursor: pointer; touch-action: manipulation; }
     border-radius: 20px;
     padding: 8px;
     min-width: 0;
+  }
+  .play-hint {
+    margin-top: 6px;
+    font-size: 12px;
+    padding: 5px 10px;
   }
   .you-panel .seat { width: 100%; }
   .you-panel .seat-meta strong { max-width: none; }

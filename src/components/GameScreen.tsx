@@ -129,6 +129,9 @@ export function GameScreen({
                     : `等待 ${view.players[view.currentPlayerIndex]?.name} 出牌`}
               </div>
             )}
+            {view.phase === "playing" && view.currentTrick.length > 0 && yourTurn && (
+              <div className="pond-hint">轮到你出牌了</div>
+            )}
             {view.phase === "playing" && view.currentTrick.length > 0 && thinker && !yourTurn && (
               <div className="pond-hint">{thinker.name} 正在想…</div>
             )}
@@ -210,6 +213,15 @@ export function GameScreen({
             handCount={you.handCount}
             self
           />
+          {yourTurn && (
+            <div className="play-hint">
+              {view.currentTrick.length === 0
+                ? "该你领出啦，点一张牌"
+                : leadMeta
+                  ? `该你出牌啦 · 跟${leadMeta.name}`
+                  : "该你出牌啦，点一张牌"}
+            </div>
+          )}
           <div
             className="hand"
             ref={handRef}
