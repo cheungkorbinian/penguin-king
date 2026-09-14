@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { getLeadSuit } from "../../shared/legal.ts";
 import type { Card, ClientView, TigressAs } from "../../shared/types.ts";
 import { cardTitle, SUIT_META } from "../../shared/theme.ts";
@@ -62,6 +62,7 @@ export function GameScreen({
     <div
       className={`game-screen${view.phase === "bidding" ? " has-bid-overlay" : ""}`}
       data-seats={view.players.length}
+      data-hand={view.hand.length}
     >
       <header className="topbar">
         <button className="text-btn" onClick={onLeave}>
@@ -202,7 +203,10 @@ export function GameScreen({
             handCount={you.handCount}
             self
           />
-          <div className="hand">
+          <div
+            className="hand"
+            style={{ "--hand-count": Math.max(view.hand.length, 1) } as CSSProperties}
+          >
             {view.hand.map((card) => {
               const legal = view.legalCardIds.includes(card.id);
               const dim = yourTurn && !legal;
