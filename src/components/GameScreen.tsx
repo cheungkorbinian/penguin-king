@@ -59,7 +59,10 @@ export function GameScreen({
   }
 
   return (
-    <div className={`game-screen${view.phase === "bidding" ? " has-bid-overlay" : ""}`}>
+    <div
+      className={`game-screen${view.phase === "bidding" ? " has-bid-overlay" : ""}`}
+      data-seats={view.players.length}
+    >
       <header className="topbar">
         <button className="text-btn" onClick={onLeave}>
           ← 离开
