@@ -632,14 +632,25 @@ button { cursor: pointer; touch-action: manipulation; }
   min-height: 0;
 }
 .playing-card .sk-card {
-  font-size: clamp(7px, 10.5cqw, 18px);
+  font-size: clamp(8px, 11cqw, 16px);
+  grid-template-rows: auto minmax(56%, 1fr) 1.45em;
+}
+.playing-card .sk-tag,
+.playing-card .sk-foot em {
+  display: none;
+}
+.playing-card .sk-head {
+  justify-content: flex-start;
 }
 .playing-card .sk-foot {
-  white-space: normal;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
   text-overflow: ellipsis;
+  font-size: 0.78em;
+  line-height: 1.45em;
+  letter-spacing: 0;
+  background: var(--paper, #fffdf8);
 }
 .sk-head {
   display: flex;
@@ -698,13 +709,14 @@ button { cursor: pointer; touch-action: manipulation; }
   margin: 0;
   min-width: 0;
   text-align: center;
-  font-size: 0.58em;
+  font-size: 0.62em;
   font-weight: 800;
-  line-height: 1.15;
-  letter-spacing: 0.02em;
+  line-height: 1.2;
+  letter-spacing: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  background: var(--paper, #fffdf8);
 }
 .sk-foot strong {
   display: block;
