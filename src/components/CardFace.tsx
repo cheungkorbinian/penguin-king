@@ -14,10 +14,18 @@ const THEME: Record<Suit, { paper: string; edge: string; ink: string }> = {
   fish: { paper: "#fffdf8", edge: "#7ec8a3", ink: "#2a5c46" },
   shell: { paper: "#fffaf1", edge: "#e8b86d", ink: "#7a4e10" },
   aurora: { paper: "#fff8fc", edge: "#d4a8d8", ink: "#5c3378" },
-  ice: { paper: "#f5f8fd", edge: "#6a86a3", ink: "#1c334c" },
+  ice: { paper: "#f4f6f8", edge: "#111111", ink: "#111111" },
 };
 
-export function CardFace({ card, small }: { card: Card; small?: boolean }) {
+export function CardFace({
+  card,
+  small,
+  tigressAs,
+}: {
+  card: Card;
+  small?: boolean;
+  tigressAs?: "pirate" | "escape";
+}) {
   const title = cardTitle(card);
   const art = artFor(card);
   const { kind } = card;
@@ -27,7 +35,7 @@ export function CardFace({ card, small }: { card: Card; small?: boolean }) {
     const name = SUIT_CARD_NAMES[kind.suit][kind.rank - 1] ?? SUIT_META[kind.suit].name;
     return (
       <article
-        className={`sk-card${small ? " is-small" : ""}${kind.rank === 14 ? " is-fourteen" : ""}`}
+        className={`sk-card${small ? " is-small" : ""}${kind.rank === 14 ? " is-fourteen" : ""}${kind.suit === "ice" ? " is-ice" : ""}`}
         style={{ "--paper": theme.paper, "--edge": theme.edge, "--ink": theme.ink } as CSSProperties}
         aria-label={title}
       >
@@ -43,7 +51,7 @@ export function CardFace({ card, small }: { card: Card; small?: boolean }) {
     );
   }
 
-  const banner = specialBanner(card);
+  const banner = specialBanner(card, tigressAs);
   const edge =
     kind.type === "pirate"
       ? "#e08a7a"
@@ -78,12 +86,16 @@ export function CardFace({ card, small }: { card: Card; small?: boolean }) {
   );
 }
 
-function specialBanner(card: Card): { title: string; sub?: string } {
+function specialBanner(card: Card, tigressAs?: "pirate" | "escape"): { title: string; sub?: string } {
   const { kind } = card;
   if (kind.type === "pirate") return { title: PIRATE_NAMES[kind.index] ?? "探险", sub: "探险企鹅" };
-  if (kind.type === "king") return { title: "企鹅王", sub: "Skull King" };
+  if (kind.type === "king") return { title: "企鹅王", sub: "最强特殊牌" };
   if (kind.type === "mermaid") return { title: kind.index === 0 ? "珍珠" : "珊瑚", sub: "人鱼企鹅" };
-  if (kind.type === "tigress") return { title: "条纹企鹅", sub: "探险或滑走" };
+  if (kind.type === "tigress") {
+    if (tigressAs === "pirate") return { title: "条纹企鹅", sub: "当探险" };
+    if (tigressAs === "escape") return { title: "条纹企鹅", sub: "当滑走" };
+    return { title: "条纹企鹅", sub: "探险或滑走" };
+  }
   if (kind.type === "escape") return { title: "滑走", sub: ESCAPE_NAMES[kind.index] };
   if (kind.type === "kraken") return { title: "深海巨妖", sub: "吞掉这一墩" };
   if (kind.type === "whale") return { title: "白鲸", sub: "只比数字" };

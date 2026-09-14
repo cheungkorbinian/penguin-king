@@ -5,10 +5,10 @@ import { cardTitle, SUIT_META } from "../../shared/theme.ts";
 import { SEAT_AVATARS } from "../assets/art.ts";
 import { CardFace } from "./CardFace.tsx";
 
-function MiniCard({ card }: { card: Card }) {
+function MiniCard({ card, tigressAs }: { card: Card; tigressAs?: TigressAs }) {
   return (
     <div className="mini-card" title={cardTitle(card)}>
-      <CardFace card={card} small />
+      <CardFace card={card} small tigressAs={tigressAs} />
     </div>
   );
 }
@@ -155,7 +155,7 @@ export function GameScreen({
                       : ""
                   }`}
                 >
-                  <MiniCard card={play.card} />
+                  <MiniCard card={play.card} tigressAs={play.tigressAs} />
                   <span>{view.players[play.playerIndex]?.name}</span>
                   {play.tigressAs && (
                     <em>{play.tigressAs === "pirate" ? "当探险" : "当滑走"}</em>
@@ -190,7 +190,7 @@ export function GameScreen({
                 <div className="trick-row last">
                   {view.lastTrick.cards.map((play) => (
                     <div key={`last-${play.playerIndex}-${play.card.id}`} className="trick-item faded">
-                      <MiniCard card={play.card} />
+                      <MiniCard card={play.card} tigressAs={play.tigressAs} />
                     </div>
                   ))}
                 </div>
