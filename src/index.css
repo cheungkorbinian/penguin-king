@@ -639,9 +639,9 @@ button { cursor: pointer; touch-action: manipulation; }
   grid-template-rows: auto minmax(56%, 1fr) 1.45em;
 }
 .playing-card .sk-card.is-special {
-  grid-template-rows: minmax(0, 1fr) 1.85em;
-  padding: 5% 6% 4%;
-  gap: 2%;
+  grid-template-rows: 1fr;
+  padding: 5%;
+  gap: 0;
 }
 .playing-card .sk-tag {
   display: none;
@@ -661,9 +661,9 @@ button { cursor: pointer; touch-action: manipulation; }
 }
 .playing-card .sk-card.is-special .sk-foot {
   white-space: normal;
-  line-height: 1.12;
-  overflow: hidden;
-  font-size: 0.7em;
+  line-height: 1.28;
+  overflow: visible;
+  font-size: 0.82em;
 }
 .playing-card .sk-card.is-special .sk-foot em {
   display: block;
@@ -729,9 +729,9 @@ button { cursor: pointer; touch-action: manipulation; }
   height: 100%;
 }
 .sk-card.is-special .sk-window img {
-  object-position: center 46%;
-  transform: scale(1.24);
-  transform-origin: center 45%;
+  object-position: center 44%;
+  transform: scale(1.42);
+  transform-origin: center 42%;
 }
 .sk-foot {
   margin: 0;
@@ -778,13 +778,15 @@ button { cursor: pointer; touch-action: manipulation; }
 .sk-card.is-small:not(.is-special) .sk-foot em { display: none; }
 .sk-card.is-small .sk-head { justify-content: flex-start; }
 .sk-card.is-small.is-special {
-  grid-template-rows: minmax(0, 1fr) 1.65em;
-  gap: 2%;
-  padding: 4% 5% 3%;
+  grid-template-rows: 1fr;
+  gap: 0;
+  padding: 5%;
 }
 .sk-card.is-small.is-special .sk-foot {
   white-space: normal;
-  line-height: 1.15;
+  line-height: 1.28;
+  font-size: 0.88em;
+  padding: 0.22em 0.28em 0.26em;
 }
 .sk-card.is-small.is-special .sk-foot em {
   display: block;
@@ -800,8 +802,33 @@ button { cursor: pointer; touch-action: manipulation; }
   color: #111;
 }
 .sk-card.is-special {
-  grid-template-rows: minmax(0, 1fr) auto;
-  padding: 5% 6% 4%;
+  grid-template-rows: 1fr;
+  gap: 0;
+  padding: 5%;
+  position: relative;
+}
+.sk-card.is-special .sk-foot {
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  bottom: 5.5%;
+  z-index: 2;
+  padding: 0.28em 0.35em 0.34em;
+  border-radius: 0.5em;
+  background: rgba(255, 253, 248, 0.95);
+  line-height: 1.28;
+  white-space: normal;
+  overflow: visible;
+}
+.sk-card.is-special .sk-foot strong {
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+}
+.sk-card.is-special .sk-foot em {
+  margin-top: 0.1em;
+  line-height: 1.3;
+  letter-spacing: 0.03em;
+  font-size: 0.88em;
 }
 .sk-card.is-back {
   display: block;
