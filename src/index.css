@@ -637,8 +637,10 @@ button { cursor: pointer; touch-action: manipulation; }
   font-size: clamp(8px, 11cqw, 16px);
   grid-template-rows: auto minmax(56%, 1fr) 1.45em;
 }
-.playing-card .sk-tag,
-.playing-card .sk-foot em {
+.playing-card .sk-card.is-special {
+  grid-template-rows: minmax(58%, 1fr) 2.35em;
+}
+.playing-card .sk-tag {
   display: none;
 }
 .playing-card .sk-head {
@@ -653,6 +655,15 @@ button { cursor: pointer; touch-action: manipulation; }
   line-height: 1.45em;
   letter-spacing: 0;
   background: var(--paper, #fffdf8);
+}
+.playing-card .sk-card.is-special .sk-foot {
+  white-space: normal;
+  line-height: 1.15;
+  overflow: hidden;
+}
+.playing-card .sk-card.is-special .sk-foot em {
+  display: block;
+  white-space: nowrap;
 }
 .sk-head {
   display: flex;
