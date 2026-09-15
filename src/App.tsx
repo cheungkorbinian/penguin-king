@@ -34,6 +34,20 @@ function loadName(): string {
   return localStorage.getItem("penguin-king-name") || "圆圆";
 }
 
+function loadPlayerId(): string {
+  const key = "penguin-king-id";
+  let id = localStorage.getItem(key);
+  if (!id) {
+    id = globalThis.crypto?.randomUUID?.() ?? `p-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+    localStorage.setItem(key, id);
+  }
+  return id;
+}
+
+function loadLastRoom(): string {
+  return localStorage.getItem("penguin-king-room") || "";
+}
+
 function loadDifficulty(): AiDifficulty {
   return normalizeAiDifficulty(localStorage.getItem("penguin-king-ai"));
 }
@@ -58,7 +72,9 @@ export default function App() {
   const [lobby, setLobby] = useState<LobbyState | null>(null);
   const [onlineView, setOnlineView] = useState<ClientView | null>(null);
   const [playerId, setPlayerId] = useState<string | null>(null);
+  const playerKey = useMemo(() => loadPlayerId(), []);
   const socketRef = useRef<Socket | null>(null);
+  const leaving = useRef(false);
 
   useEffect(() => {
     localStorage.setItem("penguin-king-name", name);
@@ -73,6 +89,10 @@ export default function App() {
     const t = setTimeout(() => setToast(null), 2800);
     return () => clearTimeout(t);
   }, [toast]);
+
+  useEffect(() => {
+    if (loadLastRoom()) ensureSocket();
+  }, [playerKey]);
 
   useEffect(() => {
     if (!solo) return;
@@ -114,11 +134,25 @@ export default function App() {
 
   function ensureSocket(): Socket {
     if (socketRef.current) return socketRef.current;
-    const socket = io({ autoConnect: true });
+    const socket = io({
+      autoConnect: true,
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionDelay: 400,
+      reconnectionDelayMax: 2500,
+    });
+    socket.on("connect", () => {
+      leaving.current = false;
+      const code = loadLastRoom();
+      if (!code) return;
+      socket.emit("joinRoom", { code, name: loadName(), playerId: playerKey });
+    });
     socket.on("joined", ({ playerId: id, code }: { playerId: string; code: string }) => {
       setPlayerId(id);
+      localStorage.setItem("penguin-king-room", code);
+      setJoinCode(code);
       setLobby((prev) => prev ?? { code, hostId: id, expansion, aiDifficulty, started: false, players: [] });
-      setScreen("online-lobby");
+      setScreen((current) => (current === "online-game" ? current : "online-lobby"));
     });
     socket.on("lobby", (next: LobbyState) => {
       setLobby(next);
@@ -127,25 +161,37 @@ export default function App() {
       setOnlineView(view);
       setScreen("online-game");
     });
-    socket.on("errorMsg", (msg: string) => setToast(msg));
-    socket.on("disconnect", () => setToast("和浮冰断开连接了"));
+    socket.on("errorMsg", (msg: string) => {
+      setToast(msg);
+      if (msg.includes("找不到这桌企鹅")) localStorage.removeItem("penguin-king-room");
+    });
+    socket.on("disconnect", () => {
+      if (!leaving.current) setToast("和浮冰断开连接了");
+    });
     socketRef.current = socket;
     return socket;
   }
 
   function createRoom() {
-    ensureSocket().emit("createRoom", { name, expansion, aiDifficulty });
+    localStorage.removeItem("penguin-king-room");
+    ensureSocket().emit("createRoom", { name, expansion, aiDifficulty, playerId: playerKey });
   }
 
-  function joinRoom() {
-    const code = joinCode.trim().toUpperCase();
-    if (code.length < 4) return setToast("请输入 4 位房间号");
-    ensureSocket().emit("joinRoom", { code, name });
+  function joinRoom(code?: string) {
+    const next = (typeof code === "string" ? code : joinCode).trim().toUpperCase();
+    if (next.length < 4) return setToast("请输入 4 位房间号");
+    ensureSocket().emit("joinRoom", { code: next, name, playerId: playerKey });
   }
 
   function leaveOnline() {
-    socketRef.current?.disconnect();
+    leaving.current = true;
+    const socket = socketRef.current;
     socketRef.current = null;
+    if (socket) {
+      socket.io.reconnection(false);
+      socket.removeAllListeners();
+      socket.disconnect();
+    }
     setLobby(null);
     setOnlineView(null);
     setPlayerId(null);
@@ -205,6 +251,7 @@ export default function App() {
           playerId={playerId}
           onAddAi={() => ensureSocket().emit("addAi", { aiDifficulty: lobby.aiDifficulty })}
           onSetAiDifficulty={(next) => ensureSocket().emit("setAiDifficulty", { aiDifficulty: next })}
+          onSetExpansion={(next) => ensureSocket().emit("setExpansion", { expansion: next })}
           onRemove={(id) => ensureSocket().emit("removeSeat", { id })}
           onStart={() => ensureSocket().emit("startGame")}
           onLeave={leaveOnline}
@@ -318,6 +365,10 @@ function Home({
         <section className="panel home-mode">
           <h2>线上</h2>
           <div className="home-mode-controls">
+            <label className="toggle home-online-expand">
+              <input type="checkbox" checked={expansion} onChange={(e) => setExpansion(e.target.checked)} />
+              进阶牌（巨妖、白鲸、宝藏）
+            </label>
             <button className="btn primary" onClick={onCreate}>
               创建房间
             </button>
@@ -344,6 +395,7 @@ function OnlineLobby({
   playerId,
   onAddAi,
   onSetAiDifficulty,
+  onSetExpansion,
   onRemove,
   onStart,
   onLeave,
@@ -352,6 +404,7 @@ function OnlineLobby({
   playerId: string | null;
   onAddAi: () => void;
   onSetAiDifficulty: (v: AiDifficulty) => void;
+  onSetExpansion: (v: boolean) => void;
   onRemove: (id: string) => void;
   onStart: () => void;
   onLeave: () => void;
@@ -394,6 +447,7 @@ function OnlineLobby({
                 {p.name}
                 {p.isHost ? " · 房主" : ""}
                 {p.type === "ai" ? " · 人机" : ""}
+                {!p.connected && p.type !== "ai" ? " · 暂时离开" : ""}
               </span>
               {isHost && !p.isHost && (
                 <button className="text-btn" onClick={() => onRemove(p.id)}>
@@ -404,29 +458,40 @@ function OnlineLobby({
           ))}
         </ul>
         {isHost && (
-          <div className="row-btns lobby-ai-row">
-            <label className="lobby-diff">
-              人机
-              <select
-                value={lobby.aiDifficulty ?? "easy"}
-                onChange={(e) => onSetAiDifficulty(e.target.value as AiDifficulty)}
-              >
-                <option value="easy">轻松</option>
-                <option value="sharp">认真</option>
-                <option value="hard">困难</option>
-              </select>
+          <>
+            <label className="lobby-expand">
+              <input
+                type="checkbox"
+                checked={Boolean(lobby.expansion)}
+                onChange={(e) => onSetExpansion(e.target.checked)}
+              />
+              进阶牌（巨妖、白鲸、宝藏）
             </label>
-            <button className="btn ghost" onClick={onAddAi} disabled={lobby.players.length >= 6}>
-              加人机
-            </button>
-            <button className="btn primary" onClick={onStart} disabled={lobby.players.length < 2}>
-              开打！
-            </button>
-          </div>
+            <div className="row-btns lobby-ai-row">
+              <label className="lobby-diff">
+                人机
+                <select
+                  value={lobby.aiDifficulty ?? "easy"}
+                  onChange={(e) => onSetAiDifficulty(e.target.value as AiDifficulty)}
+                >
+                  <option value="easy">轻松</option>
+                  <option value="sharp">认真</option>
+                  <option value="hard">困难</option>
+                </select>
+              </label>
+              <button className="btn ghost" onClick={onAddAi} disabled={lobby.players.length >= 6}>
+                加人机
+              </button>
+              <button className="btn primary" onClick={onStart} disabled={lobby.players.length < 2}>
+                开打！
+              </button>
+            </div>
+          </>
         )}
         {!isHost && (
           <p className="waiting">
-            等房主开打……人机是{AI_DIFFICULTY_LABEL[lobby.aiDifficulty ?? "easy"]}档。
+            等房主开打……人机是{AI_DIFFICULTY_LABEL[lobby.aiDifficulty ?? "easy"]}档
+            {lobby.expansion ? "，已加入进阶牌。" : "，未加入进阶牌。"}
           </p>
         )}
       </section>

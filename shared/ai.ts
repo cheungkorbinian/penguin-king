@@ -248,17 +248,17 @@ export function aiThinkMs(state: GameState, rand = Math.random): number {
   if (idx === null) return 0;
   const difficulty = difficultyOf(state);
   if (state.phase === "bidding") {
-    if (difficulty === "hard") return Math.round(1080 + rand() * 920);
-    if (difficulty === "sharp") return Math.round(820 + rand() * 680);
-    return Math.round(520 + rand() * 380);
+    if (difficulty === "hard") return Math.round(280 + rand() * 220);
+    if (difficulty === "sharp") return Math.round(220 + rand() * 160);
+    return Math.round(140 + rand() * 120);
   }
   const cards = state.hands[idx]?.length ?? 1;
   if (difficulty === "hard") {
-    return Math.round(1180 + Math.min(cards, 10) * 90 + rand() * 720);
+    return Math.round(320 + Math.min(cards, 10) * 28 + rand() * 180);
   }
-  const scan = Math.min(cards, 10) * (difficulty === "sharp" ? 70 : 45);
-  const base = difficulty === "sharp" ? 980 : 680;
-  const jitter = rand() * (difficulty === "sharp" ? 520 : 360);
+  const scan = Math.min(cards, 10) * (difficulty === "sharp" ? 22 : 14);
+  const base = difficulty === "sharp" ? 260 : 180;
+  const jitter = rand() * (difficulty === "sharp" ? 140 : 100);
   return Math.round(base + scan + jitter);
 }
 

@@ -11,9 +11,9 @@ import {
 } from "../../shared/theme.ts";
 
 const THEME: Record<Suit, { paper: string; edge: string; ink: string }> = {
-  fish: { paper: "#fffdf8", edge: "#7ec8a3", ink: "#2a5c46" },
-  shell: { paper: "#fffaf1", edge: "#e8b86d", ink: "#7a4e10" },
-  aurora: { paper: "#fff8fc", edge: "#d4a8d8", ink: "#5c3378" },
+  fish: { paper: "#f3fbf6", edge: "#1a6b42", ink: "#163d2c" },
+  shell: { paper: "#fff6e8", edge: "#b45c0c", ink: "#6a3c08" },
+  aurora: { paper: "#fbf4ff", edge: "#6d248f", ink: "#4a1d68" },
   ice: { paper: "#f4f6f8", edge: "#111111", ink: "#111111" },
 };
 
@@ -40,11 +40,19 @@ export function CardFace({
         aria-label={title}
       >
         <header className="sk-head">
-          <span className="sk-chip">{kind.rank}</span>
+          <span className="sk-chip">
+            {kind.rank}
+            {kind.rank === 14 ? (
+              <small>{kind.suit === "ice" ? "+20" : "+10"}</small>
+            ) : null}
+          </span>
           <span className="sk-tag">{SUIT_META[kind.suit].name}</span>
         </header>
         <div className="sk-window">
           <img src={art} alt="" draggable={false} />
+          {kind.rank === 14 ? (
+            <b className="sk-score-mark">{kind.suit === "ice" ? "+20" : "+10"}</b>
+          ) : null}
         </div>
         <footer className="sk-foot">{name}</footer>
       </article>
@@ -54,20 +62,20 @@ export function CardFace({
   const banner = specialBanner(card, tigressAs);
   const edge =
     kind.type === "pirate"
-      ? "#e08a7a"
+      ? "#c45c48"
       : kind.type === "king"
-        ? "#e4b84a"
+        ? "#c49218"
         : kind.type === "mermaid"
-          ? "#7ec8c4"
+          ? "#1f7a76"
           : kind.type === "tigress"
-            ? "#e0a06a"
+            ? "#c46a22"
             : kind.type === "kraken"
-              ? "#e09aaa"
+              ? "#b84462"
               : kind.type === "whale"
-                ? "#8bb8d4"
+                ? "#2f6f9c"
                 : kind.type === "loot"
-                  ? "#e4c46a"
-                  : "#b8c0c8";
+                  ? "#b89218"
+                  : "#5c6670";
 
   return (
     <article

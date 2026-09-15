@@ -221,7 +221,22 @@ button { cursor: pointer; touch-action: manipulation; }
   align-items: center;
   gap: 8px;
   min-width: 0;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
+}
+.home-mode-controls .home-online-expand {
+  flex: 1 1 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  margin: 0;
+  padding: 0 2px;
+  font-size: 13px;
+  font-weight: 700;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  border-radius: 0;
 }
 .home-mode select {
   flex: 1 1 6em;
@@ -362,6 +377,31 @@ button { cursor: pointer; touch-action: manipulation; }
 .join-row { display: flex; gap: 8px; margin-top: 12px; }
 .join-row input { flex: 1; min-width: 0; }
 .row-btns { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; align-items: center; }
+.lobby-expand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 4px 0 0;
+  padding: 12px 14px;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.3;
+  color: var(--ink);
+  background: #fff8e8;
+  border: 2px solid #e4b84a;
+  border-radius: 16px;
+}
+.lobby-expand input {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  accent-color: #c4891a;
+}
+.lobby-ai-row {
+  margin-top: 10px;
+}
 .lobby-diff {
   display: inline-flex;
   align-items: center;
@@ -623,8 +663,8 @@ button { cursor: pointer; touch-action: manipulation; }
   overflow: hidden;
   border-radius: 7% / 5%;
   background: var(--paper, #fffdf8);
-  border: 2.5px solid var(--edge, #d9c4a0);
-  box-shadow: inset 0 0 0 1.5px #fffaf3;
+  border: 3.5px solid var(--edge, #8a6a3a);
+  box-shadow: inset 0 0 0 1px rgba(255, 250, 243, 0.85);
   color: var(--ink, #4a3728);
   font-family: "Baloo 2", "Noto Sans SC", sans-serif;
   user-select: none;
@@ -650,6 +690,10 @@ button { cursor: pointer; touch-action: manipulation; }
 }
 .playing-card .sk-head {
   justify-content: flex-start;
+}
+.playing-card .sk-score-mark {
+  font-size: max(10px, 0.78em);
+  padding: 0.08em 0.38em;
 }
 .playing-card .sk-foot {
   display: block;
@@ -690,6 +734,7 @@ button { cursor: pointer; touch-action: manipulation; }
 }
 .sk-chip {
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
@@ -702,6 +747,33 @@ button { cursor: pointer; touch-action: manipulation; }
   font-size: 1.05em;
   line-height: 1;
   color: var(--ink);
+}
+.sk-chip small {
+  display: block;
+  font-size: 0.48em;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.1;
+  color: #b45309;
+}
+.sk-score-mark {
+  position: absolute;
+  left: 50%;
+  bottom: 7%;
+  z-index: 2;
+  transform: translateX(-50%);
+  padding: 0.12em 0.48em;
+  border-radius: 0.45em;
+  background: #f5c518;
+  border: 1.5px solid #8a5200;
+  color: #4a2800;
+  font-size: 0.78em;
+  font-weight: 800;
+  font-style: normal;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  white-space: nowrap;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 .sk-card.is-fourteen .sk-chip {
   color: #b45309;
@@ -785,13 +857,17 @@ button { cursor: pointer; touch-action: manipulation; }
 .sk-card.is-small {
   gap: 2%;
   padding: 5% 6% 4%;
-  border-width: 1.5px;
-  box-shadow: inset 0 0 0 1px #fffaf3;
+  border-width: 2.5px;
+  box-shadow: inset 0 0 0 1px rgba(255, 250, 243, 0.85);
   font-size: clamp(5px, 12cqw, 13px);
 }
 .sk-card.is-small .sk-tag { display: none; }
 .sk-card.is-small:not(.is-special) .sk-foot em { display: none; }
 .sk-card.is-small .sk-head { justify-content: flex-start; }
+.sk-card.is-small .sk-score-mark {
+  font-size: max(9px, 0.72em);
+  padding: 0.06em 0.32em;
+}
 .sk-card.is-small.is-special {
   grid-template-rows: minmax(0, 1fr) auto;
   gap: 3%;
@@ -817,6 +893,14 @@ button { cursor: pointer; touch-action: manipulation; }
 .sk-card.is-ice .sk-chip {
   border-color: #111;
   color: #111;
+}
+.sk-card.is-ice .sk-chip small,
+.sk-card.is-ice .sk-score-mark {
+  color: #111;
+}
+.sk-card.is-ice .sk-score-mark {
+  background: #fff;
+  border-color: #111;
 }
 .sk-card.is-special {
   grid-template-rows: minmax(0, 1fr) auto;
