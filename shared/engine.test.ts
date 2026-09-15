@@ -195,6 +195,40 @@ describe("full game", () => {
     expect(state.history[0]).toHaveLength(1);
   });
 
+  it("shows the last round score sheet before crowning a winner", () => {
+    const players: Player[] = [
+      { id: "a", name: "圆圆", type: "human", connected: true },
+      { id: "b", name: "冰冰", type: "human", connected: true },
+    ];
+    let state = createGame(players, { expansion: false, maxRounds: 1 }, makeRng(7));
+    state = applyAction(state, { type: "bid", playerIndex: 0, amount: 0 });
+    state = applyAction(state, { type: "bid", playerIndex: 1, amount: 1 });
+    const first = state.currentPlayerIndex;
+    const second = 1 - first;
+    const firstCard = state.hands[first]![0]!;
+    state = applyAction(state, {
+      type: "play",
+      playerIndex: first,
+      cardId: firstCard.id,
+      tigressAs: firstCard.kind.type === "tigress" ? "escape" : undefined,
+    });
+    const last = state.hands[second]![0]!;
+    state = applyAction(state, {
+      type: "play",
+      playerIndex: second,
+      cardId: last.id,
+      tigressAs: last.kind.type === "tigress" ? "escape" : undefined,
+    });
+    state = applyAction(state, { type: "collect", playerIndex: 0 });
+    state = applyAction(state, { type: "collect", playerIndex: 1 });
+    expect(state.phase).toBe("roundEnd");
+    expect(state.round).toBe(1);
+    expect(state.history[0]).toHaveLength(1);
+    state = applyAction(state, { type: "nextRound" });
+    expect(state.phase).toBe("gameEnd");
+    expect(state.winnerIndices.length).toBeGreaterThan(0);
+  });
+
   it("four AIs finish a 10-round game without crashing", () => {
     const players: Player[] = [
       { id: "1", name: "圆圆", type: "ai", connected: true },

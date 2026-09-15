@@ -55,6 +55,8 @@ export function GameScreen({
   const yourTurn = view.phase === "playing" && view.currentPlayerIndex === view.you;
   const leadSuit = getLeadSuit(view.currentTrick);
   const leadMeta = leadSuit ? SUIT_META[leadSuit] : null;
+  const opener = view.players[view.leaderIndex];
+  const lastRound = view.round >= view.config.maxRounds;
 
   function tryPlay(card: Card) {
     if (!yourTurn || !view.legalCardIds.includes(card.id)) return;
@@ -105,11 +107,13 @@ export function GameScreen({
               score={p.score}
               active={
                 (view.phase === "playing" && view.currentPlayerIndex === p.index) ||
-                view.thinkingPlayerIndex === p.index
+                view.thinkingPlayerIndex === p.index ||
+                (view.phase === "bidding" && view.leaderIndex === p.index)
               }
               thinking={view.thinkingPlayerIndex === p.index}
               collected={view.phase === "collecting" && p.collected}
               dealer={view.dealerIndex === p.index}
+              leading={view.phase === "bidding" && view.leaderIndex === p.index}
               type={p.type}
               connected={p.connected}
               handCount={p.handCount}
@@ -122,6 +126,11 @@ export function GameScreen({
             {view.phase === "bidding" && (
               <div className="bid-panel">
                 <h2>这一轮要赢几墩？</h2>
+                <p className="bid-lead">
+                  {view.leaderIndex === view.you
+                    ? "这一轮由你先出"
+                    : `这一轮由${opener?.name ?? "下一位"}先出`}
+                </p>
                 <p>看着手牌，再喊出你的预测。大家同时亮标。</p>
                 {thinker && (
                   <p className="waiting think-status">
@@ -251,8 +260,9 @@ export function GameScreen({
             bid={you.bid}
             tricks={you.tricksWon}
             score={you.score}
-            active={yourTurn}
+            active={yourTurn || (view.phase === "bidding" && view.leaderIndex === view.you)}
             dealer={view.dealerIndex === view.you}
+            leading={view.phase === "bidding" && view.leaderIndex === view.you}
             type="human"
             connected
             handCount={you.handCount}
@@ -341,7 +351,7 @@ export function GameScreen({
       {view.phase === "roundEnd" && view.yourLastRound && (
         <div className="modal-backdrop">
           <div className="modal">
-            <h2>第 {view.round} 轮结束</h2>
+            <h2>第 {view.round} 轮结算</h2>
             <ul className="score-list">
               {view.players.map((p) => (
                 <li key={p.id}>
@@ -357,7 +367,7 @@ export function GameScreen({
               ))}
             </ul>
             <button className="btn primary" onClick={onNextRound}>
-              下一轮
+              {lastRound ? "看总成绩" : "下一轮"}
             </button>
           </div>
         </div>
@@ -377,6 +387,10 @@ export function GameScreen({
                 .map((p) => (
                   <li key={p.id}>
                     <span>{p.name}</span>
+                    <span>
+                      末轮 {(p.lastRoundScore?.total ?? 0) > 0 ? "+" : ""}
+                      {p.lastRoundScore?.total ?? 0}
+                    </span>
                     <b>{p.score} 分</b>
                   </li>
                 ))}
@@ -433,6 +447,7 @@ function Seat({
   thinking,
   collected,
   dealer,
+  leading,
   type,
   connected,
   handCount,
@@ -447,13 +462,14 @@ function Seat({
   thinking?: boolean;
   collected?: boolean;
   dealer: boolean;
+  leading?: boolean;
   type: string;
   connected: boolean;
   handCount: number;
   self?: boolean;
 }) {
   return (
-    <div className={`seat${active ? " active" : ""}${thinking ? " thinking" : ""}${self ? " self" : ""}`}>
+    <div className={`seat${active ? " active" : ""}${thinking ? " thinking" : ""}${self ? " self" : ""}${leading ? " leading" : ""}`}>
       <div className="seat-avatar-wrap">
         <img
           className="seat-avatar"
@@ -471,6 +487,7 @@ function Seat({
       <div className="seat-meta">
         <strong>
           {name}
+          {leading ? " · 先出" : ""}
           {dealer ? " · 庄" : ""}
           {type === "ai" ? " · 人机" : ""}
           {!connected ? " · 离开" : ""}

@@ -473,6 +473,7 @@ button { cursor: pointer; touch-action: manipulation; }
   box-shadow: 0 2px 0 rgba(234, 210, 168, 0.9);
 }
 .seat.active { outline: 3px solid var(--gold); transform: translateY(-2px); }
+.seat.leading { outline: 3px solid var(--gold); }
 .seat.thinking { outline-color: #f0c27a; }
 .seat-avatar-wrap {
   position: relative;
@@ -968,6 +969,10 @@ button { cursor: pointer; touch-action: manipulation; }
   margin: 0 0 8px;
   color: var(--muted);
   font-size: 14px;
+}
+.bid-panel .bid-lead {
+  color: #9a3412;
+  font-weight: 800;
 }
 .bid-panel .waiting {
   color: var(--pond-deep);

@@ -233,19 +233,19 @@ function finishRound(state: GameState): void {
     state.scores[i] = (state.scores[i] ?? 0) + scored.total;
   }
 
+  state.phase = "roundEnd";
+}
+
+function advanceRound(state: GameState, rng?: () => number): void {
+  if (state.phase !== "roundEnd") throw new Error("这一轮还没结束");
   if (state.round >= state.config.maxRounds) {
     state.phase = "gameEnd";
     const best = Math.max(...state.scores);
     state.winnerIndices = state.scores
       .map((score, i) => (score === best ? i : -1))
       .filter((i) => i >= 0);
-  } else {
-    state.phase = "roundEnd";
+    return;
   }
-}
-
-function advanceRound(state: GameState, rng?: () => number): void {
-  if (state.phase !== "roundEnd") throw new Error("这一轮还没结束");
   state.round += 1;
   state.dealerIndex = (state.dealerIndex + 1) % state.players.length;
   dealRound(state, rng);
