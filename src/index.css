@@ -518,10 +518,6 @@ button { cursor: pointer; touch-action: manipulation; }
   justify-content: center;
   gap: 2px;
 }
-.game-screen.has-bid-overlay .opponents {
-  position: relative;
-  z-index: 24;
-}
 @media (prefers-reduced-motion: reduce) {
   .think-dots i { animation: none; opacity: 0.7; }
   .play-hint { animation: none; }
@@ -597,7 +593,11 @@ button { cursor: pointer; touch-action: manipulation; }
   filter: drop-shadow(0 8px 10px rgba(16, 36, 58, 0.18));
 }
 .playing-card {
-  width: 100px;
+  width: clamp(
+    48px,
+    calc((100% - (var(--hand-n, 1) - 1) * var(--hand-gap, 8px)) / var(--hand-n, 1)),
+    100px
+  );
   flex: 0 0 auto;
   scroll-snap-align: start;
   touch-action: pan-x;
@@ -867,8 +867,10 @@ button { cursor: pointer; touch-action: manipulation; }
   to { opacity: 1; transform: none; }
 }
 .hand {
+  --hand-n: 1;
+  --hand-gap: 8px;
   display: flex;
-  gap: 8px;
+  gap: var(--hand-gap);
   overflow-x: auto;
   overflow-y: hidden;
   padding: 12px 4px 8px;
@@ -889,6 +891,22 @@ button { cursor: pointer; touch-action: manipulation; }
   flex: 1 1 0;
   min-width: 0;
   pointer-events: none;
+}
+.hand.is-packed {
+  flex-wrap: wrap;
+  justify-content: center;
+  overflow-x: hidden;
+  overflow-y: auto;
+  row-gap: 6px;
+}
+.hand.is-filled::before,
+.hand.is-filled::after,
+.hand.is-packed::before,
+.hand.is-packed::after {
+  display: none;
+}
+.hand.is-packed .playing-card {
+  width: clamp(56px, calc((100% - 4 * var(--hand-gap)) / 5), 76px);
 }
 
 .modal-backdrop {
@@ -913,6 +931,30 @@ button { cursor: pointer; touch-action: manipulation; }
 .rules-modal { width: min(560px, 100%); max-height: 80dvh; overflow: auto; }
 .rules-modal ul { padding-left: 18px; }
 .waiting { font-weight: 700; color: var(--pond-deep); }
+
+.bid-panel {
+  width: min(420px, 100%);
+  background: rgba(255, 253, 248, 0.94);
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  border-radius: 24px;
+  padding: 18px 16px 16px;
+  box-shadow: 0 16px 36px rgba(20, 32, 48, 0.18);
+  text-align: center;
+  backdrop-filter: blur(12px);
+}
+.bid-panel h2 {
+  margin: 0 0 6px;
+  font-family: "Baloo 2", sans-serif;
+  font-size: 22px;
+}
+.bid-panel p {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.bid-panel .waiting {
+  color: var(--pond-deep);
+}
 
 .bid-stepper {
   display: flex;
@@ -1068,7 +1110,14 @@ button { cursor: pointer; touch-action: manipulation; }
   .album-zoom { grid-template-columns: 1fr; }
   .zoom-card, .zoom-card .sk-card { width: min(160px, 42vw); margin: 0 auto; }
   .setup-grid { grid-template-columns: 1fr; }
-  .playing-card { width: 92px; height: auto; }
+  .playing-card {
+    width: clamp(
+      48px,
+      calc((100% - (var(--hand-n, 1) - 1) * var(--hand-gap, 8px)) / var(--hand-n, 1)),
+      92px
+    );
+    height: auto;
+  }
   .mini-card { width: 72px; height: auto; }
   .pond-ring { border-radius: 36px; min-height: 180px; }
   .seat { min-width: 140px; }
@@ -1256,13 +1305,55 @@ button { cursor: pointer; touch-action: manipulation; }
   .you-panel .seat { width: 100%; }
   .you-panel .seat-meta strong { max-width: none; }
   .hand {
-    gap: 8px;
+    --hand-gap: 6px;
+    gap: var(--hand-gap);
     padding: 10px 2px 4px;
   }
   .playing-card {
-    width: 92px;
+    width: clamp(
+      48px,
+      calc((100% - (var(--hand-n, 1) - 1) * var(--hand-gap, 6px)) / var(--hand-n, 1)),
+      92px
+    );
   }
-  .game-screen.has-bid-overlay .opponents { z-index: auto; }
+  .bid-panel {
+    width: 100%;
+    max-height: 100%;
+    overflow: auto;
+    padding: 10px 10px 12px;
+    border-radius: 18px;
+  }
+  .bid-panel h2 {
+    font-size: 18px;
+    margin-bottom: 2px;
+  }
+  .bid-panel p {
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+  .pond-ring:has(.bid-panel) {
+    justify-content: center;
+  }
+  .bid-panel .bid-stepper {
+    gap: 10px;
+    margin: 2px 0 6px;
+  }
+  .bid-panel .bid-stepper strong {
+    font-size: 32px;
+  }
+  .bid-panel .bid-stepper button {
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+  }
+  .bid-panel .bid-dots {
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+  .bid-panel .bid-dots button {
+    width: 32px;
+    height: 32px;
+  }
 
   .modal-backdrop {
     padding: max(12px, env(safe-area-inset-top, 0px)) 12px max(12px, env(safe-area-inset-bottom, 0px));
@@ -1300,7 +1391,11 @@ button { cursor: pointer; touch-action: manipulation; }
   .home-title h1 { font-size: 26px; }
   .seat-avatar { width: 32px; height: 32px; }
   .playing-card {
-    width: 86px;
+    width: clamp(
+      46px,
+      calc((100% - (var(--hand-n, 1) - 1) * var(--hand-gap, 6px)) / var(--hand-n, 1)),
+      86px
+    );
   }
   .mini-card { width: clamp(52px, 16vw, 68px); }
   .you-panel { padding: 6px; }
@@ -1314,7 +1409,13 @@ button { cursor: pointer; touch-action: manipulation; }
   .home-title h1 { font-size: 28px; }
   .home-dock { width: min(920px, calc(100% - 16px)); }
   .arena { grid-template-rows: auto minmax(0, 1fr) auto; padding: 0 10px 8px; }
-  .playing-card { width: 76px; }
+  .playing-card {
+    width: clamp(
+      44px,
+      calc((100% - (var(--hand-n, 1) - 1) * var(--hand-gap, 6px)) / var(--hand-n, 1)),
+      76px
+    );
+  }
   .mini-card { width: 48px; }
   .seat { min-width: 120px; }
   .seat-avatar { width: 36px; height: 36px; }

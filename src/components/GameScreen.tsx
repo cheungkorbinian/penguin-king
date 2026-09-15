@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { getLeadSuit } from "../../shared/legal.ts";
 import type { Card, ClientView, TigressAs } from "../../shared/types.ts";
 import { cardTitle, SUIT_META } from "../../shared/theme.ts";
@@ -67,7 +67,7 @@ export function GameScreen({
 
   return (
     <div
-      className={`game-screen${view.phase === "bidding" ? " has-bid-overlay" : ""}`}
+      className="game-screen"
       data-seats={view.players.length}
       data-hand={view.hand.length}
     >
@@ -119,6 +119,51 @@ export function GameScreen({
 
         <div className="pond">
           <div className="pond-ring">
+            {view.phase === "bidding" && (
+              <div className="bid-panel">
+                <h2>这一轮要赢几墩？</h2>
+                <p>左右滑看看手牌，再喊出你的预测。大家同时亮标。</p>
+                {thinker && (
+                  <p className="waiting think-status">
+                    {thinker.name} 正在琢磨要赢几墩
+                    <ThinkDots />
+                  </p>
+                )}
+                {you.bid !== null ? (
+                  <p className="waiting">你标了 {you.bid}，正在等其他企鹅……</p>
+                ) : (
+                  <>
+                    <div className="bid-stepper">
+                      <button type="button" onClick={() => setBid((n) => Math.max(0, n - 1))}>
+                        −
+                      </button>
+                      <strong>{bid}</strong>
+                      <button
+                        type="button"
+                        onClick={() => setBid((n) => Math.min(view.cardsDealt, n + 1))}
+                      >
+                        +
+                      </button>
+                    </div>
+                    <div className="bid-dots">
+                      {Array.from({ length: view.cardsDealt + 1 }, (_, n) => (
+                        <button
+                          key={n}
+                          type="button"
+                          className={n === bid ? "on" : ""}
+                          onClick={() => setBid(n)}
+                        >
+                          {n}
+                        </button>
+                      ))}
+                    </div>
+                    <button type="button" className="btn primary" onClick={() => onBid(bid)}>
+                      呱呱呱！标 {bid}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
             {leadMeta && <div className="lead-pill">{leadMeta.emoji} 跟 {leadMeta.name}</div>}
             {view.phase === "playing" && view.currentTrick.length === 0 && (
               <div className="pond-hint">
@@ -213,6 +258,9 @@ export function GameScreen({
             handCount={you.handCount}
             self
           />
+          {view.phase === "bidding" && (
+            <div className="play-hint">左右滑，把牌看全再标墩</div>
+          )}
           {yourTurn && (
             <div className="play-hint">
               {view.currentTrick.length === 0
@@ -223,8 +271,9 @@ export function GameScreen({
             </div>
           )}
           <div
-            className="hand"
+            className={`hand${view.hand.length >= 7 ? " is-packed" : view.hand.length >= 4 ? " is-filled" : ""}`}
             ref={handRef}
+            style={{ "--hand-n": Math.max(view.hand.length, 1) } as CSSProperties}
             onPointerDown={(event) => {
               swiping.current = false;
               swipeStartX.current = event.clientX;
@@ -246,7 +295,7 @@ export function GameScreen({
                     if (swiping.current) return;
                     tryPlay(card);
                   }}
-                  disabled={!yourTurn || !legal}
+                  disabled={view.phase === "playing" && (!yourTurn || !legal)}
                   title={cardTitle(card)}
                 >
                   <CardFace card={card} />
@@ -257,46 +306,6 @@ export function GameScreen({
           </div>
         </div>
       </div>
-
-      {view.phase === "bidding" && (
-        <div className="modal-backdrop">
-          <div className="modal bid-modal">
-            <h2>这一轮要赢几墩？</h2>
-            <p>看着手牌，喊出你的预测。大家同时亮标。</p>
-            {thinker && (
-              <p className="waiting think-status">
-                {thinker.name} 正在琢磨要赢几墩
-                <ThinkDots />
-              </p>
-            )}
-            {you.bid !== null ? (
-              <p className="waiting">你标了 {you.bid}，正在等其他企鹅……</p>
-            ) : (
-              <>
-                <div className="bid-stepper">
-                  <button onClick={() => setBid((n) => Math.max(0, n - 1))}>−</button>
-                  <strong>{bid}</strong>
-                  <button onClick={() => setBid((n) => Math.min(view.cardsDealt, n + 1))}>+</button>
-                </div>
-                <div className="bid-dots">
-                  {Array.from({ length: view.cardsDealt + 1 }, (_, n) => (
-                    <button
-                      key={n}
-                      className={n === bid ? "on" : ""}
-                      onClick={() => setBid(n)}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                </div>
-                <button className="btn primary" onClick={() => onBid(bid)}>
-                  呱呱呱！标 {bid}
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      )}
 
       {tigressId && (
         <div className="modal-backdrop" onClick={() => setTigressId(null)}>
