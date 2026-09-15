@@ -122,7 +122,7 @@ export function GameScreen({
             {view.phase === "bidding" && (
               <div className="bid-panel">
                 <h2>这一轮要赢几墩？</h2>
-                <p>左右滑看看手牌，再喊出你的预测。大家同时亮标。</p>
+                <p>看着手牌，再喊出你的预测。大家同时亮标。</p>
                 {thinker && (
                   <p className="waiting think-status">
                     {thinker.name} 正在琢磨要赢几墩
@@ -258,9 +258,6 @@ export function GameScreen({
             handCount={you.handCount}
             self
           />
-          {view.phase === "bidding" && (
-            <div className="play-hint">左右滑，把牌看全再标墩</div>
-          )}
           {yourTurn && (
             <div className="play-hint">
               {view.currentTrick.length === 0
@@ -271,9 +268,14 @@ export function GameScreen({
             </div>
           )}
           <div
-            className={`hand${view.hand.length >= 7 ? " is-packed" : view.hand.length >= 4 ? " is-filled" : ""}`}
+            className={`hand${view.hand.length >= 6 ? " is-packed" : view.hand.length >= 4 ? " is-filled" : ""}`}
             ref={handRef}
-            style={{ "--hand-n": Math.max(view.hand.length, 1) } as CSSProperties}
+            style={
+              {
+                "--hand-n": Math.max(view.hand.length, 1),
+                "--pack-cols": Math.max(2, Math.ceil(view.hand.length / 2)),
+              } as CSSProperties
+            }
             onPointerDown={(event) => {
               swiping.current = false;
               swipeStartX.current = event.clientX;
