@@ -637,7 +637,7 @@ button { cursor: pointer; touch-action: manipulation; }
 }
 .playing-card .sk-card {
   font-size: clamp(8px, 12.5cqw, 15px);
-  grid-template-rows: auto minmax(56%, 1fr) 1.35em;
+  grid-template-rows: auto minmax(60%, 1fr) 1.2em;
 }
 .playing-card .sk-card.is-special {
   grid-template-rows: minmax(0, 1fr) auto;
@@ -724,6 +724,9 @@ button { cursor: pointer; touch-action: manipulation; }
   overflow: hidden;
   background: #f4e6d2;
 }
+.sk-card:not(.is-special) .sk-window {
+  background: var(--paper, #fffdf8);
+}
 .sk-window img,
 .sk-card.is-back img {
   width: 100%;
@@ -733,6 +736,10 @@ button { cursor: pointer; touch-action: manipulation; }
   object-fit: cover;
   object-position: center 40%;
   display: block;
+}
+.sk-card:not(.is-special):not(.is-back) .sk-window img {
+  object-fit: contain;
+  object-position: center bottom;
 }
 .sk-card.is-special .sk-window {
   height: 100%;
