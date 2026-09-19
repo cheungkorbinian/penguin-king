@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: penguin-king
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npx tsx server/index.ts
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
